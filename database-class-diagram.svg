@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentStyleType="text/css" height="1519px" preserveAspectRatio="none" style="width:1132px;height:1519px;background:#FFFFFF;" version="1.1" viewBox="0 0 1132 1519" width="1132px" zoomAndPan="magnify"><defs/><g><rect fill="none" height="26.2969" id="_title" style="stroke:none;stroke-width:1.0;" width="336" x="391.25" y="5"/><text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacing" textLength="326" x="396.25" y="22.9951">MyTour Database / Domain Class Diagram</text><!--MD5=[c23d9781ab907d98e153c7f0d747c66c]
+class UserEntity--><g id="elem_UserEntity"><rect codeLine="6" fill="#F1F1F1" height="170.3438" id="UserEntity" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="215" x="524.5" y="44.2969"/><text fill="#000000" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacing" textLength="49" x="607.5" y="60.4355">«Entity»</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="70" x="597" y="76.2607">UserEntity</text><line style="stroke:#181818;stroke-width:0.5;" x1="525.5" x2="738.5" y1="84.5625" y2="84.5625"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="62" x="530.5" y="101.5576">+Long id</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="126" x="530.5" y="117.8545">+String username</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="203" x="530.5" y="134.1514">+String usernameNormalized</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="151" x="530.5" y="150.4482">-String passwordHash</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="130" x="530.5" y="166.7451">+Instant createdAt</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="135" x="530.5" y="183.042">+Instant updatedAt</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="100" x="530.5" y="199.3389">+Long version</text><line style="stroke:#181818;stroke-width:0.5;" x1="525.5" x2="738.5" y1="206.6406" y2="206.6406"/></g><!--MD5=[5c1d0250bf3bf27a826f867331ca1ef6]
+class TourEntity--><g id="elem_TourEntity"><rect codeLine="16" fill="#F1F1F1" height="447.3906" id="TourEntity" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="384" x="440" y="291.2969"/><text fill="#000000" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacing" textLength="49" x="607.5" y="307.4355">«Entity»</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="70" x="597" y="323.2607">TourEntity</text><line style="stroke:#181818;stroke-width:0.5;" x1="441" x2="823" y1="331.5625" y2="331.5625"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="62" x="446" y="348.5576">+Long id</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="132" x="446" y="364.8545">+Long userId «FK»</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="95" x="446" y="381.1514">+String name</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="133" x="446" y="397.4482">+String description</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="145" x="446" y="413.7451">+String startLocation</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="141" x="446" y="430.042">+String endLocation</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="214" x="446" y="446.3389">+TransportType transportType</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="133" x="446" y="462.6357">+String timezoneId</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="222" x="446" y="478.9326">+BigDecimal plannedDistanceM</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="202" x="446" y="495.2295">+Integer estimatedDurationS</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="167" x="446" y="511.5264">+String coverImagePath</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="249" x="446" y="527.8232">+String coverImageOriginalFilename</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="226" x="446" y="544.1201">+String coverImageContentType</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="198" x="446" y="560.417">+Long coverImageSizeBytes</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="128" x="446" y="576.7139">+Integer logCount</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="172" x="446" y="593.0107">+Integer popularityScore</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="274" x="446" y="609.3076">+PopularityCategory popularityCategory</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="159" x="446" y="625.6045">+String popularityLabel</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="220" x="446" y="641.9014">+Integer childFriendlinessScore</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="372" x="446" y="658.1982">+ChildFriendlinessCategory childFriendlinessCategory</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="207" x="446" y="674.4951">+String childFriendlinessLabel</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="130" x="446" y="690.792">+Instant createdAt</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="135" x="446" y="707.0889">+Instant updatedAt</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="100" x="446" y="723.3857">+Long version</text><line style="stroke:#181818;stroke-width:0.5;" x1="441" x2="823" y1="730.6875" y2="730.6875"/></g><!--MD5=[51fb1cfcbe9115b4f5b1410ff995a292]
+class TourRouteEntity--><g id="elem_TourRouteEntity"><rect codeLine="43" fill="#F1F1F1" height="235.5313" id="TourRouteEntity" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="199" x="69.5" y="815.2969"/><text fill="#000000" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacing" textLength="49" x="144.5" y="831.4355">«Entity»</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="112" x="113" y="847.2607">TourRouteEntity</text><line style="stroke:#181818;stroke-width:0.5;" x1="70.5" x2="267.5" y1="855.5625" y2="855.5625"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="90" x="75.5" y="872.5576">+Long tourId</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="142" x="75.5" y="888.8545">+String routeSource</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="135" x="75.5" y="905.1514">+String routeProfile</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="144" x="75.5" y="921.4482">+BigDecimal startLat</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="149" x="75.5" y="937.7451">+BigDecimal startLon</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="140" x="75.5" y="954.042">+BigDecimal endLat</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="145" x="75.5" y="970.3389">+BigDecimal endLon</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="173" x="75.5" y="986.6357">+BigDecimal midpointLat</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="178" x="75.5" y="1002.9326">+BigDecimal midpointLon</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="187" x="75.5" y="1019.2295">+JsonNode routeGeometry</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="171" x="75.5" y="1035.5264">+Instant routeFetchedAt</text><line style="stroke:#181818;stroke-width:0.5;" x1="70.5" x2="267.5" y1="1042.8281" y2="1042.8281"/></g><!--MD5=[d16f58e183dd308eb9327e89ee096a87]
+class TourLogEntity--><g id="elem_TourLogEntity"><rect codeLine="57" fill="#F1F1F1" height="235.5313" id="TourLogEntity" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="208" x="335" y="815.2969"/><text fill="#000000" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacing" textLength="49" x="414.5" y="831.4355">«Entity»</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="95" x="391.5" y="847.2607">TourLogEntity</text><line style="stroke:#181818;stroke-width:0.5;" x1="336" x2="542" y1="855.5625" y2="855.5625"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="62" x="341" y="872.5576">+Long id</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="129" x="341" y="888.8545">+Long tourId «FK»</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="149" x="341" y="905.1514">+Instant performedAt</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="122" x="341" y="921.4482">+String comment</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="108" x="341" y="937.7451">+Short difficulty</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="196" x="341" y="954.042">+BigDecimal totalDistanceM</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="138" x="341" y="970.3389">+Integer totalTimeS</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="92" x="341" y="986.6357">+Short rating</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="130" x="341" y="1002.9326">+Instant createdAt</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="135" x="341" y="1019.2295">+Instant updatedAt</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="100" x="341" y="1035.5264">+Long version</text><line style="stroke:#181818;stroke-width:0.5;" x1="336" x2="542" y1="1042.8281" y2="1042.8281"/></g><!--MD5=[3faf227e9dbe603b87014cabf626a4fb]
+class TourLogWeatherEntity--><g id="elem_TourLogWeatherEntity"><rect codeLine="71" fill="#F1F1F1" height="268.125" id="TourLogWeatherEntity" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="267" x="305.5" y="1128.2969"/><text fill="#000000" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacing" textLength="49" x="414.5" y="1144.4355">«Entity»</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="153" x="362.5" y="1160.2607">TourLogWeatherEntity</text><line style="stroke:#181818;stroke-width:0.5;" x1="306.5" x2="571.5" y1="1168.5625" y2="1168.5625"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="115" x="311.5" y="1185.5576">+Long tourLogId</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="112" x="311.5" y="1201.8545">+String provider</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="166" x="311.5" y="1218.1514">+String providerDataset</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="160" x="311.5" y="1234.4482">+BigDecimal lookupLat</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="165" x="311.5" y="1250.7451">+BigDecimal lookupLon</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="200" x="311.5" y="1267.042">+Instant weatherObservedAt</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="189" x="311.5" y="1283.3389">+BigDecimal temperatureC</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="255" x="311.5" y="1299.6357">+BigDecimal relativeHumidityPercent</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="203" x="311.5" y="1315.9326">+BigDecimal precipitationMm</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="158" x="311.5" y="1332.2295">+Integer weatherCode</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="191" x="311.5" y="1348.5264">+String weatherDescription</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="201" x="311.5" y="1364.8232">+BigDecimal windSpeedKmh</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="130" x="311.5" y="1381.1201">+Instant fetchedAt</text><line style="stroke:#181818;stroke-width:0.5;" x1="306.5" x2="571.5" y1="1388.4219" y2="1388.4219"/></g><!--MD5=[a50a78e4f6fc64f3c267698d7a49ae86]
+class TransportType--><g id="elem_TransportType"><rect codeLine="87" fill="#F1F1F1" height="107.4844" id="TransportType" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="107" x="578.5" y="879.7969"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="101" x="581.5" y="897.792">TransportType</text><line style="stroke:#181818;stroke-width:0.5;" x1="579.5" x2="684.5" y1="906.0938" y2="906.0938"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="31" x="584.5" y="923.0889">BIKE</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="31" x="584.5" y="939.3857">HIKE</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="64" x="584.5" y="955.6826">RUNNING</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="70" x="584.5" y="971.9795">VACATION</text><line style="stroke:#181818;stroke-width:0.5;" x1="579.5" x2="684.5" y1="979.2813" y2="979.2813"/></g><!--MD5=[f04f0c023627ccac6f729607827183b1]
+class PopularityCategory--><g id="elem_PopularityCategory"><rect codeLine="94" fill="#F1F1F1" height="107.4844" id="PopularityCategory" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="135" x="720.5" y="879.7969"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="129" x="723.5" y="897.792">PopularityCategory</text><line style="stroke:#181818;stroke-width:0.5;" x1="721.5" x2="854.5" y1="906.0938" y2="906.0938"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="32" x="726.5" y="923.0889">NEW</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="100" x="726.5" y="939.3857">RARELY_USED</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="65" x="726.5" y="955.6826">POPULAR</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="109" x="726.5" y="971.9795">VERY_POPULAR</text><line style="stroke:#181818;stroke-width:0.5;" x1="721.5" x2="854.5" y1="979.2813" y2="979.2813"/></g><!--MD5=[3141aad4955b687f2afda8c73617e524]
+class ChildFriendlinessCategory--><g id="elem_ChildFriendlinessCategory"><rect codeLine="101" fill="#F1F1F1" height="123.7813" id="ChildFriendlinessCategory" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="235" x="890.5" y="871.2969"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="179" x="918.5" y="889.292">ChildFriendlinessCategory</text><line style="stroke:#181818;stroke-width:0.5;" x1="891.5" x2="1124.5" y1="897.5938" y2="897.5938"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="73" x="896.5" y="914.5889">UNKNOWN</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="122" x="896.5" y="930.8857">FAMILY_FRIENDLY</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="223" x="896.5" y="947.1826">MODERATE_FAMILY_SUITABILITY</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="153" x="896.5" y="963.4795">CHALLENGING_ROUTE</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="125" x="896.5" y="979.7764">ADULT_ORIENTED</text><line style="stroke:#181818;stroke-width:0.5;" x1="891.5" x2="1124.5" y1="987.0781" y2="987.0781"/></g><g id="elem_GMN532"><path d="M775,101.7969 L775,125.2969 L739.72,129.2969 L775,133.2969 L775,157.1953 A0,0 0 0 0 775,157.1953 L995,157.1953 A0,0 0 0 0 995,157.1953 L995,111.7969 L985,101.7969 L775,101.7969 A0,0 0 0 0 775,101.7969 " fill="#FEFFDD" style="stroke:#181818;stroke-width:0.5;"/><path d="M985,101.7969 L985,111.7969 L995,111.7969 L985,101.7969 " fill="#FEFFDD" style="stroke:#181818;stroke-width:0.5;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="135" x="781" y="118.8638">Username login only.</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="199" x="781" y="133.9966">usernameNormalized is unique</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="134" x="781" y="149.1294">and case-insensitive.</text></g><g id="elem_GMN535"><path d="M859,487.2969 L859,510.7969 L824.25,514.7969 L859,518.7969 L859,542.6953 A0,0 0 0 0 859,542.6953 L1085,542.6953 A0,0 0 0 0 1085,542.6953 L1085,497.2969 L1075,487.2969 L859,487.2969 A0,0 0 0 0 859,487.2969 " fill="#FEFFDD" style="stroke:#181818;stroke-width:0.5;"/><path d="M1075,487.2969 L1075,497.2969 L1085,497.2969 L1075,487.2969 " fill="#FEFFDD" style="stroke:#181818;stroke-width:0.5;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="180" x="865" y="504.3638">Cover image files are stored</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="205" x="865" y="519.4966">on the filesystem. The database</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="202" x="865" y="534.6294">stores metadata and path only.</text></g><g id="elem_GMN538"><path d="M6,1226.7969 L6,1297.3281 A0,0 0 0 0 6,1297.3281 L270,1297.3281 A0,0 0 0 0 270,1297.3281 L270,1236.7969 L260,1226.7969 L145.3,1226.7969 L157.9,1051.4269 L137.3,1226.7969 L6,1226.7969 A0,0 0 0 0 6,1226.7969 " fill="#FEFFDD" style="stroke:#181818;stroke-width:0.5;"/><path d="M260,1226.7969 L260,1236.7969 L270,1236.7969 L260,1226.7969 " fill="#FEFFDD" style="stroke:#181818;stroke-width:0.5;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="234" x="12" y="1243.8638">routeGeometry is OpenRouteService</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="243" x="12" y="1258.9966">GeoJSON stored as PostgreSQL jsonb.</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="214" x="12" y="1274.1294">Midpoint coordinates are used for</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="101" x="12" y="1289.2622">weather lookup.</text></g><g id="elem_GMN541"><path d="M608,1234.7969 L608,1290.1953 A0,0 0 0 0 608,1290.1953 L882,1290.1953 A0,0 0 0 0 882,1290.1953 L882,1244.7969 L872,1234.7969 L723.94,1234.7969 L543.02,1045.4569 L715.94,1234.7969 L608,1234.7969 A0,0 0 0 0 608,1234.7969 " fill="#FEFFDD" style="stroke:#181818;stroke-width:0.5;"/><path d="M872,1234.7969 L872,1244.7969 L882,1244.7969 L872,1234.7969 " fill="#FEFFDD" style="stroke:#181818;stroke-width:0.5;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="253" x="614" y="1251.8638">performedAt is stored as a UTC Instant.</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="186" x="614" y="1266.9966">The frontend displays it using</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="143" x="614" y="1282.1294">TourEntity.timezoneId.</text></g><g id="elem_GMN544"><path d="M301.5,1457.2969 L301.5,1512.6953 A0,0 0 0 0 301.5,1512.6953 L576.5,1512.6953 A0,0 0 0 0 576.5,1512.6953 L576.5,1467.2969 L566.5,1457.2969 L443,1457.2969 L439,1396.3369 L435,1457.2969 L301.5,1457.2969 A0,0 0 0 0 301.5,1457.2969 " fill="#FEFFDD" style="stroke:#181818;stroke-width:0.5;"/><path d="M566.5,1457.2969 L566.5,1467.2969 L576.5,1467.2969 L566.5,1457.2969 " fill="#FEFFDD" style="stroke:#181818;stroke-width:0.5;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="218" x="307.5" y="1474.3638">Generated Open-Meteo snapshot.</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="252" x="307.5" y="1489.4966">If log time or route coordinates change,</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="254" x="307.5" y="1504.6294">the snapshot is refetched and replaced.</text></g><!--MD5=[5922a67ea6d1b391c900b83384c97b94]
+reverse link UserEntity to TourEntity--><g id="link_UserEntity_TourEntity"><path codeLine="109" d="M632,227.5069 C632,247.2769 632,268.8269 632,290.9469 " fill="none" id="UserEntity-backto-TourEntity" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="632,214.4569,628,220.4569,632,226.4569,636,220.4569,632,214.4569" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="32" x="633" y="257.3638">owns</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="8" x="623.6438" y="234.7669">1</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="23" x="608.6227" y="280.4184">0..*</text></g><!--MD5=[e77ff43f65921a28eaa4229d68e10ef1]
+reverse link TourEntity to TourRouteEntity--><g id="link_TourEntity_TourRouteEntity"><path codeLine="110" d="M430,697.5069 C374.14,747.7569 315.95,800.1069 268.73,842.5869 " fill="none" id="TourEntity-backto-TourRouteEntity" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="439.67,688.8169,432.5349,689.861,430.7544,696.8488,437.8895,695.8047,439.67,688.8169" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="34" x="347" y="781.3638">route</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="8" x="424.0009" y="692.3834">1</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="24" x="276.586" y="832.7695">0..1</text></g><!--MD5=[4d772506350d5b36da2422e9de7f98e8]
+reverse link TourEntity to TourLogEntity--><g id="link_TourEntity_TourLogEntity"><path codeLine="111" d="M523.26,750.4669 C512.89,772.8369 502.71,794.7969 493.22,815.2869 " fill="none" id="TourEntity-backto-TourLogEntity" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="528.86,738.3769,522.7054,742.1347,523.8071,749.2612,529.9616,745.5033,528.86,738.3769" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="26" x="514" y="781.3638">logs</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="8" x="517.0097" y="758.7436">1</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="23" x="472.9568" y="804.3326">0..*</text></g><!--MD5=[e915eb51870ba9038ab67c5890ee286c]
+reverse link TourLogEntity to TourLogWeatherEntity--><g id="link_TourLogEntity_TourLogWeatherEntity"><path codeLine="112" d="M439,1064.6569 C439,1085.5069 439,1107.1069 439,1128.0269 " fill="none" id="TourLogEntity-backto-TourLogWeatherEntity" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="439,1051.4269,435,1057.4269,439,1063.4269,443,1057.4269,439,1051.4269" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="51" x="440" y="1094.3638">weather</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="8" x="430.7688" y="1070.7741">1</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="24" x="414.3438" y="1117.3409">0..1</text></g><!--MD5=[27cc577a05d4893519a92c948d561f30]
+link TourEntity to TransportType--><g id="link_TourEntity_TransportType"><path codeLine="114" d="M632,738.3769 C632,788.7569 632,838.0169 632,874.2769 " fill="none" id="TourEntity-to-TransportType" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="632,879.5369,636,870.5369,632,874.5369,628,870.5369,632,879.5369" style="stroke:#181818;stroke-width:1.0;"/></g><!--MD5=[e5007db58d5e3e4c6d87d32cf6e4d092]
+link TourEntity to PopularityCategory--><g id="link_TourEntity_PopularityCategory"><path codeLine="115" d="M715.37,738.3769 C734.31,788.9669 752.84,838.4169 766.44,874.7269 " fill="none" id="TourEntity-to-PopularityCategory" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="768.24,879.5369,768.8153,869.7048,766.4797,874.857,761.3275,872.5213,768.24,879.5369" style="stroke:#181818;stroke-width:1.0;"/></g><!--MD5=[d6aca54f9f74d222caf75aa6da40e0fe]
+link TourEntity to ChildFriendlinessCategory--><g id="link_TourEntity_ChildFriendlinessCategory"><path codeLine="116" d="M824.13,728.6269 C869.68,779.0769 914.9,829.1669 949.1,867.0469 " fill="none" id="TourEntity-to-ChildFriendlinessCategory" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="952.79,871.1469,949.7226,861.7879,949.4373,867.4375,943.7876,867.1522,952.79,871.1469" style="stroke:#181818;stroke-width:1.0;"/></g><!--MD5=[796d4d253c77ce01669a6e67b110d4d7]
+@startuml
+skinparam classAttributeIconSize 0
+hide circle
+
+title MyTour Database / Domain Class Diagram
+
+class UserEntity <<Entity>> {
+  +Long id
+  +String username
+  +String usernameNormalized
+  -String passwordHash
+  +Instant createdAt
+  +Instant updatedAt
+  +Long version
+}
+
+class TourEntity <<Entity>> {
+  +Long id
+  +Long userId <<FK>>
+  +String name
+  +String description
+  +String startLocation
+  +String endLocation
+  +TransportType transportType
+  +String timezoneId
+  +BigDecimal plannedDistanceM
+  +Integer estimatedDurationS
+  +String coverImagePath
+  +String coverImageOriginalFilename
+  +String coverImageContentType
+  +Long coverImageSizeBytes
+  +Integer logCount
+  +Integer popularityScore
+  +PopularityCategory popularityCategory
+  +String popularityLabel
+  +Integer childFriendlinessScore
+  +ChildFriendlinessCategory childFriendlinessCategory
+  +String childFriendlinessLabel
+  +Instant createdAt
+  +Instant updatedAt
+  +Long version
+}
+
+class TourRouteEntity <<Entity>> {
+  +Long tourId
+  +String routeSource
+  +String routeProfile
+  +BigDecimal startLat
+  +BigDecimal startLon
+  +BigDecimal endLat
+  +BigDecimal endLon
+  +BigDecimal midpointLat
+  +BigDecimal midpointLon
+  +JsonNode routeGeometry
+  +Instant routeFetchedAt
+}
+
+class TourLogEntity <<Entity>> {
+  +Long id
+  +Long tourId <<FK>>
+  +Instant performedAt
+  +String comment
+  +Short difficulty
+  +BigDecimal totalDistanceM
+  +Integer totalTimeS
+  +Short rating
+  +Instant createdAt
+  +Instant updatedAt
+  +Long version
+}
+
+class TourLogWeatherEntity <<Entity>> {
+  +Long tourLogId
+  +String provider
+  +String providerDataset
+  +BigDecimal lookupLat
+  +BigDecimal lookupLon
+  +Instant weatherObservedAt
+  +BigDecimal temperatureC
+  +BigDecimal relativeHumidityPercent
+  +BigDecimal precipitationMm
+  +Integer weatherCode
+  +String weatherDescription
+  +BigDecimal windSpeedKmh
+  +Instant fetchedAt
+}
+
+enum TransportType {
+  BIKE
+  HIKE
+  RUNNING
+  VACATION
+}
+
+enum PopularityCategory {
+  NEW
+  RARELY_USED
+  POPULAR
+  VERY_POPULAR
+}
+
+enum ChildFriendlinessCategory {
+  UNKNOWN
+  FAMILY_FRIENDLY
+  MODERATE_FAMILY_SUITABILITY
+  CHALLENGING_ROUTE
+  ADULT_ORIENTED
+}
+
+UserEntity "1" *- - "0..*" TourEntity : owns
+TourEntity "1" *- - "0..1" TourRouteEntity : route
+TourEntity "1" *- - "0..*" TourLogEntity : logs
+TourLogEntity "1" *- - "0..1" TourLogWeatherEntity : weather
+
+TourEntity - -> TransportType
+TourEntity - -> PopularityCategory
+TourEntity - -> ChildFriendlinessCategory
+
+note right of UserEntity
+Username login only.
+usernameNormalized is unique
+and case-insensitive.
+end note
+
+note right of TourEntity
+Cover image files are stored
+on the filesystem. The database
+stores metadata and path only.
+end note
+
+note bottom of TourRouteEntity
+routeGeometry is OpenRouteService
+GeoJSON stored as PostgreSQL jsonb.
+Midpoint coordinates are used for
+weather lookup.
+end note
+
+note bottom of TourLogEntity
+performedAt is stored as a UTC Instant.
+The frontend displays it using
+TourEntity.timezoneId.
+end note
+
+note bottom of TourLogWeatherEntity
+Generated Open-Meteo snapshot.
+If log time or route coordinates change,
+the snapshot is refetched and replaced.
+end note
+@enduml
+
+PlantUML version 1.2022.7(Mon Aug 22 17:01:30 UTC 2022)
+(GPL source distribution)
+Java Runtime: OpenJDK Runtime Environment
+JVM: OpenJDK 64-Bit Server VM
+Default Encoding: UTF-8
+Language: en
+Country: null
+--></g></svg>

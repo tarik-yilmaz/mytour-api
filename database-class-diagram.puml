@@ -1,0 +1,149 @@
+@startuml
+skinparam classAttributeIconSize 0
+hide circle
+
+title MyTour Database / Domain Class Diagram
+
+class UserEntity <<Entity>> {
+  +Long id
+  +String username
+  +String usernameNormalized
+  -String passwordHash
+  +Instant createdAt
+  +Instant updatedAt
+  +Long version
+}
+
+class TourEntity <<Entity>> {
+  +Long id
+  +Long userId <<FK>>
+  +String name
+  +String description
+  +String startLocation
+  +String endLocation
+  +TransportType transportType
+  +String timezoneId
+  +BigDecimal plannedDistanceM
+  +Integer estimatedDurationS
+  +String coverImagePath
+  +String coverImageOriginalFilename
+  +String coverImageContentType
+  +Long coverImageSizeBytes
+  +Integer logCount
+  +Integer popularityScore
+  +PopularityCategory popularityCategory
+  +String popularityLabel
+  +Integer childFriendlinessScore
+  +ChildFriendlinessCategory childFriendlinessCategory
+  +String childFriendlinessLabel
+  +Instant createdAt
+  +Instant updatedAt
+  +Long version
+}
+
+class TourRouteEntity <<Entity>> {
+  +Long tourId
+  +String routeSource
+  +String routeProfile
+  +BigDecimal startLat
+  +BigDecimal startLon
+  +BigDecimal endLat
+  +BigDecimal endLon
+  +BigDecimal midpointLat
+  +BigDecimal midpointLon
+  +JsonNode routeGeometry
+  +Instant routeFetchedAt
+}
+
+class TourLogEntity <<Entity>> {
+  +Long id
+  +Long tourId <<FK>>
+  +Instant performedAt
+  +String comment
+  +Short difficulty
+  +BigDecimal totalDistanceM
+  +Integer totalTimeS
+  +Short rating
+  +Instant createdAt
+  +Instant updatedAt
+  +Long version
+}
+
+class TourLogWeatherEntity <<Entity>> {
+  +Long tourLogId
+  +String provider
+  +String providerDataset
+  +BigDecimal lookupLat
+  +BigDecimal lookupLon
+  +Instant weatherObservedAt
+  +BigDecimal temperatureC
+  +BigDecimal relativeHumidityPercent
+  +BigDecimal precipitationMm
+  +Integer weatherCode
+  +String weatherDescription
+  +BigDecimal windSpeedKmh
+  +Instant fetchedAt
+}
+
+enum TransportType {
+  BIKE
+  HIKE
+  RUNNING
+  VACATION
+}
+
+enum PopularityCategory {
+  NEW
+  RARELY_USED
+  POPULAR
+  VERY_POPULAR
+}
+
+enum ChildFriendlinessCategory {
+  UNKNOWN
+  FAMILY_FRIENDLY
+  MODERATE_FAMILY_SUITABILITY
+  CHALLENGING_ROUTE
+  ADULT_ORIENTED
+}
+
+UserEntity "1" *-- "0..*" TourEntity : owns
+TourEntity "1" *-- "0..1" TourRouteEntity : route
+TourEntity "1" *-- "0..*" TourLogEntity : logs
+TourLogEntity "1" *-- "0..1" TourLogWeatherEntity : weather
+
+TourEntity --> TransportType
+TourEntity --> PopularityCategory
+TourEntity --> ChildFriendlinessCategory
+
+note right of UserEntity
+Username login only.
+usernameNormalized is unique
+and case-insensitive.
+end note
+
+note right of TourEntity
+Cover image files are stored
+on the filesystem. The database
+stores metadata and path only.
+end note
+
+note bottom of TourRouteEntity
+routeGeometry is OpenRouteService
+GeoJSON stored as PostgreSQL jsonb.
+Midpoint coordinates are used for
+weather lookup.
+end note
+
+note bottom of TourLogEntity
+performedAt is stored as a UTC Instant.
+The frontend displays it using
+TourEntity.timezoneId.
+end note
+
+note bottom of TourLogWeatherEntity
+Generated Open-Meteo snapshot.
+If log time or route coordinates change,
+the snapshot is refetched and replaced.
+end note
+@enduml
