@@ -41,6 +41,32 @@ The easiest way to run the project locally is by using Docker Compose. The compo
 
 The frontend service waits for the backend health check before starting.
 
+## Database Migrations
+
+The backend uses Flyway migrations for PostgreSQL schema creation and Hibernate validates the schema at startup with `spring.jpa.hibernate.ddl-auto=validate`.
+
+Migration files live in:
+
+```text
+src/main/resources/db/migration
+```
+
+To add a schema change, create the next versioned SQL file, for example:
+
+```text
+V2__add_tour_search_columns.sql
+```
+
+Then run the backend or tests so Flyway applies the migration before Hibernate validates the JPA mappings:
+
+```bash
+docker compose up --build
+```
+
+Do not edit migrations that have already run on a shared database. Add a new `V3__...sql`, `V4__...sql`, etc. instead.
+
+See the full guide: [Database Migrations](docs/database-migrations.md).
+
 ### Stopping the Application
 
 To stop the containers and remove them, press `Ctrl+C` in your terminal (if running in the foreground), or run:
