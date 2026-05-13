@@ -75,14 +75,27 @@ Guidelines for implementing the MyTour Spring Boot API. Follow these rules when 
   - Tour: name, description, from, to, transport type, distance, estimated time, route information/map data, image/file reference if used, owner.
   - TourLog: date/time, comment, difficulty, total distance, total time, rating, tour, owner through tour or explicit relation.
   - User: credentials and identity data required for registration/login.
+- Follow the database design draft for table and column naming unless there is a deliberate migration reason to differ:
+  - `app_users` for users, `tours` for planned tour data, `tour_routes` for OpenRouteService route details, `tour_logs` for accomplished tour statistics, and `tour_log_weather` for generated weather snapshots.
+  - Use SQL-friendly location names such as `start_location` and `end_location`, not reserved or awkward names such as `from` and `to`.
+  - Store distances in meters with `_m` suffix columns and durations in seconds with `_s` suffix columns.
+  - Store `performed_at` as a UTC timestamp and model it as `Instant` in Java. Use the tour `timezone_id` IANA value, for example `Europe/Vienna`, for display conversion.
+  - Persist route geometry as PostgreSQL `jsonb` GeoJSON in `tour_routes.route_geometry`.
+  - Persist route coordinates including start, end, and midpoint; use the midpoint as the default weather lookup coordinate.
 - Use numeric database ids. Enforce user privacy through authenticated ownership checks rather than opaque ids alone.
 - Store usernames case-insensitively with `username` plus `username_normalized`; keep the normalized value unique and equal to `lower(trim(username))`.
 - Store images externally on the filesystem and persist only metadata/path references in the database.
 - Avoid clear-text secrets. Passwords must be hashed with a Spring Security `PasswordEncoder`; API tokens/JWT secrets come from configuration.
 - Prefer explicit relationships:
   - `Tour` has many `TourLog` entries.
+  - `Tour` has zero or one `TourRoute`.
+  - `TourLog` has zero or one `TourLogWeather`.
   - Use cascading only where deletion semantics are intentional and tested.
+  - Deleting a tour should delete its route, logs, and weather rows, preferably through explicit and tested cascading foreign keys.
   - Be careful with bidirectional relationships and JSON serialization; DTOs should avoid recursion.
+- Use lazy loading by default for JPA relationships. Load response data explicitly in service/repository methods instead of relying on Open Session in View.
+- Add `@Version` optimistic locking fields to mutable persisted aggregates.
+- Use the agreed `transport_type` values: `BIKE`, `HIKE`, `RUNNING`, and `VACATION`.
 - For schema evolution, use Flyway migrations in `src/main/resources/db/migration`. The initial schema is `V1__init_schema.sql`.
 - Keep `spring.jpa.hibernate.ddl-auto=validate`; do not use `ddl-auto=update` or `create` for this project.
 - When changing a JPA entity, add a matching next-version Flyway migration and run the backend/tests until Flyway applies and Hibernate validation passes.
@@ -97,14 +110,21 @@ Guidelines for implementing the MyTour Spring Boot API. Follow these rules when 
 - Computed values:
   - Popularity is derived from the number of logs for a tour.
   - Child-friendliness is derived from difficulty, total time, and distance values from logs.
+- Store computed tour attributes on `tours` for list display, sorting, filtering, and full-text search:
+  - `log_count`
+  - `popularity_score`, `popularity_category`, `popularity_label`
+  - `child_friendliness_score`, `child_friendliness_category`, `child_friendliness_label`
 - Make formulas deterministic and document-worthy. Keep them in one service or calculator class with focused unit tests.
-- Decide whether computed values are calculated on read or stored/updated. If stored, keep update rules transactional and tested.
+- Recalculate stored computed values transactionally when tour logs are created, updated, or deleted.
+- Avoid searchable negated labels such as `not child friendly`, because keyword search for the positive phrase can match the negative label too.
+- For exact business categories, prefer structured filters such as `childFriendliness`, `popularity`, `transportType`, and `ratingMin` in addition to full-text search.
 
 ## OpenRouteService and External REST Calls
 
 - Encapsulate OpenRouteService integration in `client` plus a business service. Controllers never call it directly.
 - Externalize base URL, API key, profile mappings, connect timeout, and read timeout through configuration properties.
 - Use explicit DTOs for upstream requests/responses and map them to the domain.
+- Store only the route data needed by the app: source, profile, coordinates, fetched timestamp, and GeoJSON geometry.
 - Handle upstream failures deliberately:
   - Map 4xx responses to actionable domain exceptions.
   - Map 5xx/timeouts/network errors to upstream-unavailable exceptions.
@@ -112,6 +132,15 @@ Guidelines for implementing the MyTour Spring Boot API. Follow these rules when 
   - Retry only idempotent requests, and only with bounded backoff.
 - Log upstream request identifiers, route profile, latency, and failure class without logging API keys.
 - Test clients with stubs/mocks so tests do not depend on the real OpenRouteService.
+
+## Weather Snapshots
+
+- Fetch weather for tour logs from Open-Meteo, using the tour route midpoint as the lookup coordinate.
+- Store weather in `tour_log_weather` as an optional one-to-one generated snapshot. A tour log must remain valid if weather fetching fails.
+- For older logs, use Open-Meteo historical hourly weather. For very recent logs, use forecast/current endpoints as a fallback if historical data is not available yet.
+- Store selected snapshot values only, such as provider, dataset, lookup coordinates, observed time, temperature, humidity, precipitation, weather code/description, wind speed, and fetched time. Do not persist full external API responses unless a future requirement explicitly needs them.
+- Treat weather snapshots as generated immutable data. If a log's performed time or route coordinates change, refetch and replace the snapshot inside a service-layer transaction.
+- Stub weather calls in tests; tests should not call Open-Meteo.
 
 ## Security
 
