@@ -16,6 +16,7 @@ Guidelines for implementing the MyTour Spring Boot API. Follow these rules when 
 - Base package: `org.fhtw.mytourapi`.
 - Servlet MVC stack with `spring-boot-starter-webmvc`.
 - JPA/Hibernate with PostgreSQL.
+- Flyway owns database schema creation/evolution; Hibernate validates mappings with `spring.jpa.hibernate.ddl-auto=validate`.
 - Jakarta Bean Validation through `spring-boot-starter-validation`.
 - Springdoc OpenAPI UI.
 - Logback via Spring Boot logging.
@@ -28,7 +29,7 @@ Guidelines for implementing the MyTour Spring Boot API. Follow these rules when 
   - `controller` for inbound REST controllers only.
   - `service` for business use cases, computed attributes, transactions, orchestration, import/export, and OpenRouteService coordination.
   - `repository` for Spring Data repositories.
-  - `model` or `domain` for JPA entities and domain value types.
+  - `domain` for JPA entities and domain value types.
   - `dto` for request/response records used by the API.
   - `mapper` for entity/DTO conversion.
   - `config` for configuration properties, CORS, security, OpenAPI, clients, and infrastructure beans.
@@ -68,17 +69,24 @@ Guidelines for implementing the MyTour Spring Boot API. Follow these rules when 
 
 - Use JPA entities for persisted state and Spring Data repositories for access.
 - Model ownership explicitly. Each `Tour` and `TourLog` must be linked to a `User`; all repository queries for user-owned data must include the user id or owner.
+- Current persisted entities live in `src/main/java/org/fhtw/mytourapi/domain` and use `*Entity` suffixes, for example `TourEntity`, `TourLogEntity`, `TourRouteEntity`, `TourLogWeatherEntity`, and `UserEntity`.
+- Current repositories live in `src/main/java/org/fhtw/mytourapi/repository`. Prefer user-scoped methods such as `findByIdAndUser_Id(...)`, `existsByIdAndUser_Id(...)`, and `findAllByUser_Id...(...)` for user-owned reads.
 - Model the required data:
   - Tour: name, description, from, to, transport type, distance, estimated time, route information/map data, image/file reference if used, owner.
   - TourLog: date/time, comment, difficulty, total distance, total time, rating, tour, owner through tour or explicit relation.
   - User: credentials and identity data required for registration/login.
+- Use numeric database ids. Enforce user privacy through authenticated ownership checks rather than opaque ids alone.
+- Store usernames case-insensitively with `username` plus `username_normalized`; keep the normalized value unique and equal to `lower(trim(username))`.
 - Store images externally on the filesystem and persist only metadata/path references in the database.
 - Avoid clear-text secrets. Passwords must be hashed with a Spring Security `PasswordEncoder`; API tokens/JWT secrets come from configuration.
 - Prefer explicit relationships:
   - `Tour` has many `TourLog` entries.
   - Use cascading only where deletion semantics are intentional and tested.
   - Be careful with bidirectional relationships and JSON serialization; DTOs should avoid recursion.
-- For schema evolution, prefer Flyway migrations and set Hibernate DDL generation to `none` once migrations are introduced. Do not rely on `ddl-auto=update` for final hand-in quality.
+- For schema evolution, use Flyway migrations in `src/main/resources/db/migration`. The initial schema is `V1__init_schema.sql`.
+- Keep `spring.jpa.hibernate.ddl-auto=validate`; do not use `ddl-auto=update` or `create` for this project.
+- When changing a JPA entity, add a matching next-version Flyway migration and run the backend/tests until Flyway applies and Hibernate validation passes.
+- Never edit an already-applied migration on a shared/deployed database. Add a new migration that fixes it.
 - Keep transactions in services using `@Transactional`; use `readOnly = true` for read-only methods.
 - Disable or avoid Open Session in View, and design service methods to load everything the response needs.
 
