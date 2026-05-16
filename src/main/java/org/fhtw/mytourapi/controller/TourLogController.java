@@ -7,6 +7,7 @@ import org.fhtw.mytourapi.dto.CreateTourLogRequest;
 import org.fhtw.mytourapi.dto.TourLogDto;
 import org.fhtw.mytourapi.dto.TourLogWeatherDto;
 import org.fhtw.mytourapi.dto.UpdateTourLogRequest;
+import org.fhtw.mytourapi.service.IntermediateTourLogService;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -28,10 +29,17 @@ import java.util.List;
 @Tag(name = "Tour logs", description = "CRUD and weather snapshots for accomplished tour statistics.")
 public class TourLogController {
 
+    private final IntermediateTourLogService tourLogService;
+
+    public TourLogController(IntermediateTourLogService tourLogService) {
+        this.tourLogService = tourLogService;
+    }
+
     @GetMapping
     @Operation(summary = "List all logs for one user-owned tour.")
     public List<TourLogDto> listLogs(@PathVariable Long tourId) {
-        return notImplemented();
+        return tourLogService.listLogs(tourId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tour not found"));
     }
 
     @PostMapping
