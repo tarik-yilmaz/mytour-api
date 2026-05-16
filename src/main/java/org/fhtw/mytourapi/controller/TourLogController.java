@@ -49,7 +49,8 @@ public class TourLogController {
             @PathVariable Long tourId,
             @Valid @RequestBody CreateTourLogRequest request
     ) {
-        return notImplemented();
+        return tourLogService.createLog(tourId, request)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tour not found"));
     }
 
     @GetMapping("/{logId}")
@@ -58,7 +59,8 @@ public class TourLogController {
             @PathVariable Long tourId,
             @PathVariable Long logId
     ) {
-        return notImplemented();
+        return tourLogService.getLog(tourId, logId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tour log not found"));
     }
 
     @PutMapping("/{logId}")
@@ -68,7 +70,8 @@ public class TourLogController {
             @PathVariable Long logId,
             @Valid @RequestBody UpdateTourLogRequest request
     ) {
-        return notImplemented();
+        return tourLogService.updateLog(tourId, logId, request)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tour log not found"));
     }
 
     @DeleteMapping("/{logId}")
@@ -78,7 +81,9 @@ public class TourLogController {
             @PathVariable Long tourId,
             @PathVariable Long logId
     ) {
-        notImplemented();
+        if (!tourLogService.deleteLog(tourId, logId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tour log not found");
+        }
     }
 
     @PostMapping("/{logId}/weather/refresh")
@@ -87,10 +92,7 @@ public class TourLogController {
             @PathVariable Long tourId,
             @PathVariable Long logId
     ) {
-        return notImplemented();
-    }
-
-    private static <T> T notImplemented() {
-        throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, "Tour log service is not implemented yet");
+        return tourLogService.refreshWeather(tourId, logId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tour log not found"));
     }
 }
