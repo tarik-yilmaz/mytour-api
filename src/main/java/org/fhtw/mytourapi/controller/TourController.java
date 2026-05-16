@@ -17,6 +17,7 @@ import org.fhtw.mytourapi.dto.TourRouteDto;
 import org.fhtw.mytourapi.dto.TourSearchResponse;
 import org.fhtw.mytourapi.dto.TransportType;
 import org.fhtw.mytourapi.dto.UpdateTourRequest;
+import org.fhtw.mytourapi.service.IntermediateTourService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
@@ -40,6 +41,12 @@ import org.springframework.web.server.ResponseStatusException;
 @Tag(name = "Tours", description = "CRUD, search, route data, images, import, and export for user-owned tours.")
 public class TourController {
 
+    private final IntermediateTourService tourService;
+
+    public TourController(IntermediateTourService tourService) {
+        this.tourService = tourService;
+    }
+
     @GetMapping
     @Operation(summary = "Search and filter tours owned by the authenticated user.")
     public TourSearchResponse searchTours(
@@ -49,7 +56,7 @@ public class TourController {
             @RequestParam(required = false) ChildFriendlinessCategory childFriendliness,
             @RequestParam(required = false) @Min(1) @Max(5) Short ratingMin
     ) {
-        return notImplemented();
+        return tourService.searchTours(q, transportType, popularity, childFriendliness);
     }
 
     @PostMapping
@@ -62,7 +69,8 @@ public class TourController {
     @GetMapping("/{tourId}")
     @Operation(summary = "Get one user-owned tour by id.")
     public TourDetailDto getTour(@PathVariable Long tourId) {
-        return notImplemented();
+        return tourService.getTour(tourId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tour not found"));
     }
 
     @PutMapping("/{tourId}")
@@ -78,7 +86,9 @@ public class TourController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Physically delete a tour, its route, logs, and weather snapshots.")
     public void deleteTour(@PathVariable Long tourId) {
-        notImplemented();
+        if (!tourService.deleteTour(tourId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tour not found");
+        }
     }
 
     @PostMapping("/{tourId}/route/refresh")
