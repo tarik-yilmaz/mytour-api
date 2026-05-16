@@ -63,7 +63,7 @@ public class TourController {
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Create a tour and fetch route information from OpenRouteService.")
     public TourDetailDto createTour(@Valid @RequestBody CreateTourRequest request) {
-        return notImplemented();
+        return tourService.createTour(request);
     }
 
     @GetMapping("/{tourId}")
@@ -79,7 +79,8 @@ public class TourController {
             @PathVariable Long tourId,
             @Valid @RequestBody UpdateTourRequest request
     ) {
-        return notImplemented();
+        return tourService.updateTour(tourId, request)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tour not found"));
     }
 
     @DeleteMapping("/{tourId}")
