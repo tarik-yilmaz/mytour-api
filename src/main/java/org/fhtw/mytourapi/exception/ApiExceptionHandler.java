@@ -50,6 +50,19 @@ public class ApiExceptionHandler {
         );
     }
 
+    @ExceptionHandler(UpstreamServiceException.class)
+    public ResponseEntity<ApiErrorResponse> handleUpstreamService(
+            UpstreamServiceException exception,
+            HttpServletRequest request
+    ) {
+        return errorResponseFactory.create(
+                exception.status(),
+                exception.getMessage(),
+                request,
+                List.of()
+        );
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiErrorResponse> handleMethodArgumentNotValid(
             MethodArgumentNotValidException exception,

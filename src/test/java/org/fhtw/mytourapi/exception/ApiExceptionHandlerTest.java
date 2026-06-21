@@ -1,7 +1,9 @@
 package org.fhtw.mytourapi.exception;
 
 import org.fhtw.mytourapi.controller.TourController;
+import org.fhtw.mytourapi.config.OpenRouteServiceProperties;
 import org.fhtw.mytourapi.service.IntermediateTourService;
+import org.fhtw.mytourapi.service.RouteCalculationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -23,7 +25,7 @@ class ApiExceptionHandlerTest {
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders
-                .standaloneSetup(new TourController(new IntermediateTourService()))
+                .standaloneSetup(new TourController(intermediateTourService()))
                 .setControllerAdvice(new ApiExceptionHandler(new ApiErrorResponseFactory()))
                 .build();
     }
@@ -63,5 +65,17 @@ class ApiExceptionHandlerTest {
                 .andExpect(jsonPath("$.validationErrors", hasItem(containsString("name"))))
                 .andExpect(jsonPath("$.validationErrors", hasItem(containsString("startLocation"))))
                 .andExpect(jsonPath("$.validationErrors", hasItem(containsString("transportType"))));
+    }
+
+    private IntermediateTourService intermediateTourService() {
+        OpenRouteServiceProperties properties = new OpenRouteServiceProperties();
+        RouteCalculationService routeCalculationService = new RouteCalculationService(
+                properties,
+                (profile, startCoordinate, endCoordinate, fetchedAt) -> {
+                    throw new AssertionError("OpenRouteService client must not be used without an API key.");
+                }
+        );
+
+        return new IntermediateTourService(routeCalculationService);
     }
 }

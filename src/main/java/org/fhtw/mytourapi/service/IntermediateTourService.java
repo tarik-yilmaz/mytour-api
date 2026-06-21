@@ -15,7 +15,6 @@ import org.fhtw.mytourapi.dto.UpdateTourRequest;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
@@ -169,6 +168,12 @@ public class IntermediateTourService {
     ));
     private final AtomicLong nextTourId = new AtomicLong(5L);
 
+    private final RouteCalculationService routeCalculationService;
+
+    public IntermediateTourService(RouteCalculationService routeCalculationService) {
+        this.routeCalculationService = routeCalculationService;
+    }
+
     public TourSearchResponse searchTours(
             String query,
             TransportType transportType,
@@ -248,6 +253,30 @@ public class IntermediateTourService {
         return toursById.remove(tourId) != null;
     }
 
+    public Optional<TourRouteDto> refreshRoute(Long tourId) {
+        TourDetailDto existingTour = toursById.get(tourId);
+        if (existingTour == null || existingTour.route() == null) {
+            return Optional.empty();
+        }
+
+        TourRouteDto existingRoute = existingTour.route();
+        if (existingRoute.startCoordinate() == null || existingRoute.endCoordinate() == null) {
+            return Optional.empty();
+        }
+
+        Instant now = Instant.now();
+        CalculatedRoute calculatedRoute = routeCalculationService.calculateRoute(
+                existingTour.transportType(),
+                existingRoute.startCoordinate(),
+                existingRoute.endCoordinate(),
+                now
+        );
+        TourDetailDto updatedTour = withCalculatedRoute(existingTour, calculatedRoute, now);
+
+        toursById.put(tourId, updatedTour);
+        return Optional.of(calculatedRoute.route());
+    }
+
     private boolean matchesQuery(TourDetailDto tour, String query) {
         if (query == null || query.isBlank()) {
             return true;
@@ -301,8 +330,12 @@ public class IntermediateTourService {
             Instant updatedAt,
             Long version
     ) {
-        BigDecimal plannedDistanceM = calculateDistanceM(startCoordinate, endCoordinate);
-        Integer estimatedDurationS = estimateDurationS(plannedDistanceM, transportType);
+        CalculatedRoute calculatedRoute = routeCalculationService.calculateRoute(
+                transportType,
+                startCoordinate,
+                endCoordinate,
+                updatedAt
+        );
 
         return new TourDetailDto(
                 tourId,
@@ -313,10 +346,10 @@ public class IntermediateTourService {
                 endLocation,
                 transportType,
                 timezoneId,
-                plannedDistanceM,
-                estimatedDurationS,
+                calculatedRoute.distanceM(),
+                calculatedRoute.durationS(),
                 coverImage,
-                createRoute(transportType, startCoordinate, endCoordinate, updatedAt),
+                calculatedRoute.route(),
                 computedAttributes,
                 createdAt,
                 updatedAt,
@@ -324,21 +357,33 @@ public class IntermediateTourService {
         );
     }
 
-    private TourRouteDto createRoute(
-            TransportType transportType,
-            CoordinateDto startCoordinate,
-            CoordinateDto endCoordinate,
-            Instant routeFetchedAt
+    private TourDetailDto withCalculatedRoute(
+            TourDetailDto existingTour,
+            CalculatedRoute calculatedRoute,
+            Instant updatedAt
     ) {
-        return new TourRouteDto(
-                "INTERMEDIATE",
-                routeProfile(transportType),
-                startCoordinate,
-                endCoordinate,
-                midpoint(startCoordinate, endCoordinate),
-                null,
-                routeFetchedAt
+        return new TourDetailDto(
+                existingTour.id(),
+                existingTour.userId(),
+                existingTour.name(),
+                existingTour.description(),
+                existingTour.startLocation(),
+                existingTour.endLocation(),
+                existingTour.transportType(),
+                existingTour.timezoneId(),
+                calculatedRoute.distanceM(),
+                calculatedRoute.durationS(),
+                existingTour.coverImage(),
+                calculatedRoute.route(),
+                existingTour.computedAttributes(),
+                existingTour.createdAt(),
+                updatedAt,
+                nextVersion(existingTour.version())
         );
+    }
+
+    private Long nextVersion(Long version) {
+        return version == null ? 1L : version + 1;
     }
 
     private ComputedTourAttributesDto defaultComputedAttributes() {
@@ -351,47 +396,6 @@ public class IntermediateTourService {
                 ChildFriendlinessCategory.UNKNOWN,
                 "unknown"
         );
-    }
-
-    private String routeProfile(TransportType transportType) {
-        return switch (transportType) {
-            case BIKE -> "cycling-regular";
-            case HIKE -> "foot-hiking";
-            case RUNNING -> "foot-walking";
-            case VACATION -> "driving-car";
-        };
-    }
-
-    private CoordinateDto midpoint(CoordinateDto startCoordinate, CoordinateDto endCoordinate) {
-        return new CoordinateDto(
-                startCoordinate.latitude().add(endCoordinate.latitude()).divide(BigDecimal.valueOf(2), 6, RoundingMode.HALF_UP),
-                startCoordinate.longitude().add(endCoordinate.longitude()).divide(BigDecimal.valueOf(2), 6, RoundingMode.HALF_UP)
-        );
-    }
-
-    private BigDecimal calculateDistanceM(CoordinateDto startCoordinate, CoordinateDto endCoordinate) {
-        double earthRadiusM = 6_371_000.0;
-        double startLat = Math.toRadians(startCoordinate.latitude().doubleValue());
-        double endLat = Math.toRadians(endCoordinate.latitude().doubleValue());
-        double deltaLat = Math.toRadians(endCoordinate.latitude().subtract(startCoordinate.latitude()).doubleValue());
-        double deltaLon = Math.toRadians(endCoordinate.longitude().subtract(startCoordinate.longitude()).doubleValue());
-
-        double haversine = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2)
-                + Math.cos(startLat) * Math.cos(endLat) * Math.sin(deltaLon / 2) * Math.sin(deltaLon / 2);
-        double angularDistance = 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
-
-        return BigDecimal.valueOf(Math.round(earthRadiusM * angularDistance));
-    }
-
-    private Integer estimateDurationS(BigDecimal distanceM, TransportType transportType) {
-        double speedMetersPerSecond = switch (transportType) {
-            case BIKE -> 4.8;
-            case HIKE -> 1.25;
-            case RUNNING -> 2.8;
-            case VACATION -> 8.0;
-        };
-
-        return Math.max(60, (int) Math.round(distanceM.doubleValue() / speedMetersPerSecond));
     }
 
     private static CoordinateDto coordinate(String latitude, String longitude) {

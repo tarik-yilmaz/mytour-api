@@ -95,7 +95,8 @@ public class TourController {
     @PostMapping("/{tourId}/route/refresh")
     @Operation(summary = "Refetch route data for a tour from OpenRouteService.")
     public TourRouteDto refreshRoute(@PathVariable Long tourId) {
-        return notImplemented();
+        return tourService.refreshRoute(tourId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tour not found"));
     }
 
     @PutMapping(value = "/{tourId}/cover-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
