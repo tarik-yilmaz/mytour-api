@@ -8,11 +8,11 @@ import org.fhtw.mytourapi.dto.TourDetailDto;
 import org.fhtw.mytourapi.dto.TourLogDto;
 import org.fhtw.mytourapi.dto.TourLogWeatherDto;
 import org.fhtw.mytourapi.dto.UpdateTourLogRequest;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -27,6 +27,7 @@ public class IntermediateTourLogService {
 
     private final IntermediateTourService tourService;
     private final IntermediateTourSearchIndex tourSearchIndex;
+    private final WeatherSnapshotService weatherSnapshotService;
     private final Map<Long, List<TourLogDto>> logsByTourId = new ConcurrentHashMap<>(Map.of(
             1L, List.of(
                     log(101L, 1L, "2026-05-10T17:45:00Z", "Calm evening ride, light wind, good route for beginners.", 2, "18400", 4380, 5,
@@ -53,16 +54,26 @@ public class IntermediateTourLogService {
     ));
     private final AtomicLong nextLogId = new AtomicLong(401L);
 
+    @Autowired
     public IntermediateTourLogService(
             IntermediateTourService tourService,
-            IntermediateTourSearchIndex tourSearchIndex
+            IntermediateTourSearchIndex tourSearchIndex,
+            WeatherSnapshotService weatherSnapshotService
     ) {
         this.tourService = tourService;
         this.tourSearchIndex = tourSearchIndex;
+        this.weatherSnapshotService = weatherSnapshotService;
         logsByTourId.forEach((tourId, logs) -> {
             tourService.initializeComputedAttributes(tourId, logs);
             tourSearchIndex.replaceLogs(tourId, logs);
         });
+    }
+
+    public IntermediateTourLogService(
+            IntermediateTourService tourService,
+            IntermediateTourSearchIndex tourSearchIndex
+    ) {
+        this(tourService, tourSearchIndex, WeatherSnapshotService.localFallback());
     }
 
     public Optional<List<TourLogDto>> listLogs(Long tourId) {
@@ -100,7 +111,7 @@ public class IntermediateTourLogService {
                 request.totalDistanceM(),
                 request.totalTimeS(),
                 request.rating(),
-                generatedWeather(logId, tour.get(), request.performedAt(), now),
+                weatherSnapshotService.snapshotFor(logId, tour.get(), request.performedAt(), now),
                 now,
                 now,
                 1L
@@ -165,7 +176,7 @@ public class IntermediateTourLogService {
                 request.totalDistanceM(),
                 request.totalTimeS(),
                 request.rating(),
-                generatedWeather(logId, tour.get(), request.performedAt(), now),
+                weatherSnapshotService.snapshotFor(logId, tour.get(), request.performedAt(), now),
                 existingLog.get().createdAt(),
                 now,
                 request.version() + 1
@@ -207,7 +218,7 @@ public class IntermediateTourLogService {
         }
 
         Instant now = Instant.now();
-        TourLogWeatherDto weather = generatedWeather(logId, tour.get(), existingLog.get().performedAt(), now);
+        TourLogWeatherDto weather = weatherSnapshotService.snapshotFor(logId, tour.get(), existingLog.get().performedAt(), now);
         TourLogDto updatedLog = new TourLogDto(
                 existingLog.get().id(),
                 existingLog.get().tourId(),
@@ -295,45 +306,6 @@ public class IntermediateTourLogService {
 
     private void refreshTourSearchIndex(Long tourId) {
         tourSearchIndex.replaceLogs(tourId, logsByTourId.getOrDefault(tourId, List.of()));
-    }
-
-    private TourLogWeatherDto generatedWeather(
-            Long tourLogId,
-            TourDetailDto tour,
-            Instant performedAt,
-            Instant fetchedAt
-    ) {
-        Instant observedAt = performedAt.truncatedTo(ChronoUnit.HOURS);
-        long hourBucket = Math.floorMod(observedAt.getEpochSecond() / 3600, 24);
-        String description = switch ((int) (hourBucket % 4)) {
-            case 0 -> "clear sky";
-            case 1 -> "partly cloudy";
-            case 2 -> "cloudy";
-            default -> "light breeze";
-        };
-
-        return new TourLogWeatherDto(
-                tourLogId,
-                "OPEN_METEO",
-                "intermediate-generated",
-                lookupCoordinate(tour),
-                observedAt,
-                BigDecimal.valueOf(9.5 + (hourBucket % 10) * 1.1),
-                BigDecimal.valueOf(48 + Math.floorMod(hourBucket * 3, 35)),
-                BigDecimal.ZERO,
-                (int) (hourBucket % 4),
-                description,
-                BigDecimal.valueOf(6.0 + (hourBucket % 7) * 1.4),
-                fetchedAt
-        );
-    }
-
-    private CoordinateDto lookupCoordinate(TourDetailDto tour) {
-        if (tour.route() == null || tour.route().midpointCoordinate() == null) {
-            return new CoordinateDto(BigDecimal.ZERO, BigDecimal.ZERO);
-        }
-
-        return tour.route().midpointCoordinate();
     }
 
     private static String normalizeComment(String comment) {

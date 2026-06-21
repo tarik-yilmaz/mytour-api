@@ -8,6 +8,7 @@ import org.fhtw.mytourapi.dto.CoordinateDto;
 import org.fhtw.mytourapi.dto.TourRouteDto;
 import org.fhtw.mytourapi.exception.UpstreamServiceException;
 import org.fhtw.mytourapi.service.CalculatedRoute;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -32,7 +33,7 @@ public class OpenRouteServiceDirectionsClient implements RouteDirectionsClient {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public OpenRouteServiceDirectionsClient(
-            RestClient openRouteServiceRestClient,
+            @Qualifier("openRouteServiceRestClient") RestClient openRouteServiceRestClient,
             OpenRouteServiceProperties properties
     ) {
         this.openRouteServiceRestClient = openRouteServiceRestClient;
