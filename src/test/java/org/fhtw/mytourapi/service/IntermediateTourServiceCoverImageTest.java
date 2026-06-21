@@ -68,7 +68,11 @@ class IntermediateTourServiceCoverImageTest {
     }
 
     private IntermediateTourService tourService() {
-        return new IntermediateTourService(routeCalculationService(), coverImageStorageService());
+        return new IntermediateTourService(
+                routeCalculationService(),
+                coverImageStorageService(),
+                new TourAttributeCalculator()
+        );
     }
 
     private RouteCalculationService routeCalculationService() {

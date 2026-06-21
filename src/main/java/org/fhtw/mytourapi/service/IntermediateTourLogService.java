@@ -52,6 +52,7 @@ public class IntermediateTourLogService {
 
     public IntermediateTourLogService(IntermediateTourService tourService) {
         this.tourService = tourService;
+        logsByTourId.forEach(tourService::initializeComputedAttributes);
     }
 
     public Optional<List<TourLogDto>> listLogs(Long tourId) {
@@ -94,6 +95,7 @@ public class IntermediateTourLogService {
             updatedLogs.add(log);
             return List.copyOf(updatedLogs);
         });
+        refreshTourAttributes(tourId);
 
         return Optional.of(log);
     }
@@ -134,6 +136,7 @@ public class IntermediateTourLogService {
         );
 
         replaceLog(tourId, updatedLog);
+        refreshTourAttributes(tourId);
         return Optional.of(updatedLog);
     }
 
@@ -152,6 +155,7 @@ public class IntermediateTourLogService {
         }
 
         logsByTourId.put(tourId, List.copyOf(updatedLogs));
+        refreshTourAttributes(tourId);
         return true;
     }
 
@@ -199,6 +203,10 @@ public class IntermediateTourLogService {
                 .toList();
 
         logsByTourId.put(tourId, List.copyOf(updatedLogs));
+    }
+
+    private void refreshTourAttributes(Long tourId) {
+        tourService.refreshComputedAttributes(tourId, logsByTourId.getOrDefault(tourId, List.of()));
     }
 
     private TourLogWeatherDto generatedWeather(

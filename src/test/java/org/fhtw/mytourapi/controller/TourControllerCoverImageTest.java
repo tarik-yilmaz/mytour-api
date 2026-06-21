@@ -7,6 +7,7 @@ import org.fhtw.mytourapi.exception.ApiExceptionHandler;
 import org.fhtw.mytourapi.service.CoverImageStorageService;
 import org.fhtw.mytourapi.service.IntermediateTourService;
 import org.fhtw.mytourapi.service.RouteCalculationService;
+import org.fhtw.mytourapi.service.TourAttributeCalculator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -35,7 +36,11 @@ class TourControllerCoverImageTest {
 
     @BeforeEach
     void setUp() {
-        tourService = new IntermediateTourService(routeCalculationService(), coverImageStorageService());
+        tourService = new IntermediateTourService(
+                routeCalculationService(),
+                coverImageStorageService(),
+                new TourAttributeCalculator()
+        );
         mockMvc = MockMvcBuilders
                 .standaloneSetup(new TourController(tourService))
                 .setControllerAdvice(new ApiExceptionHandler(new ApiErrorResponseFactory()))

@@ -6,6 +6,7 @@ import org.fhtw.mytourapi.config.OpenRouteServiceProperties;
 import org.fhtw.mytourapi.service.CoverImageStorageService;
 import org.fhtw.mytourapi.service.IntermediateTourService;
 import org.fhtw.mytourapi.service.RouteCalculationService;
+import org.fhtw.mytourapi.service.TourAttributeCalculator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -90,7 +91,8 @@ class ApiExceptionHandlerTest {
 
         return new IntermediateTourService(
                 routeCalculationService,
-                new CoverImageStorageService(imageStorageProperties)
+                new CoverImageStorageService(imageStorageProperties),
+                new TourAttributeCalculator()
         );
     }
 }

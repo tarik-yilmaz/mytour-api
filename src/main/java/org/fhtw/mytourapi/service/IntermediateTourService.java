@@ -7,6 +7,7 @@ import org.fhtw.mytourapi.dto.CoverImageDto;
 import org.fhtw.mytourapi.dto.CreateTourRequest;
 import org.fhtw.mytourapi.dto.PopularityCategory;
 import org.fhtw.mytourapi.dto.TourDetailDto;
+import org.fhtw.mytourapi.dto.TourLogDto;
 import org.fhtw.mytourapi.dto.TourRouteDto;
 import org.fhtw.mytourapi.dto.TourSearchResponse;
 import org.fhtw.mytourapi.dto.TourSummaryDto;
@@ -175,13 +176,16 @@ public class IntermediateTourService {
 
     private final RouteCalculationService routeCalculationService;
     private final CoverImageStorageService coverImageStorageService;
+    private final TourAttributeCalculator tourAttributeCalculator;
 
     public IntermediateTourService(
             RouteCalculationService routeCalculationService,
-            CoverImageStorageService coverImageStorageService
+            CoverImageStorageService coverImageStorageService,
+            TourAttributeCalculator tourAttributeCalculator
     ) {
         this.routeCalculationService = routeCalculationService;
         this.coverImageStorageService = coverImageStorageService;
+        this.tourAttributeCalculator = tourAttributeCalculator;
     }
 
     public TourSearchResponse searchTours(
@@ -325,6 +329,24 @@ public class IntermediateTourService {
         return true;
     }
 
+    public Optional<TourDetailDto> initializeComputedAttributes(Long tourId, List<TourLogDto> logs) {
+        TourDetailDto existingTour = toursById.get(tourId);
+        if (existingTour == null) {
+            return Optional.empty();
+        }
+
+        return replaceComputedAttributes(tourId, logs, existingTour.updatedAt(), existingTour.version());
+    }
+
+    public Optional<TourDetailDto> refreshComputedAttributes(Long tourId, List<TourLogDto> logs) {
+        TourDetailDto existingTour = toursById.get(tourId);
+        if (existingTour == null) {
+            return Optional.empty();
+        }
+
+        return replaceComputedAttributes(tourId, logs, Instant.now(), nextVersion(existingTour.version()));
+    }
+
     private boolean matchesQuery(TourDetailDto tour, String query) {
         if (query == null || query.isBlank()) {
             return true;
@@ -455,6 +477,53 @@ public class IntermediateTourService {
         );
     }
 
+    private Optional<TourDetailDto> replaceComputedAttributes(
+            Long tourId,
+            List<TourLogDto> logs,
+            Instant updatedAt,
+            Long version
+    ) {
+        TourDetailDto existingTour = toursById.get(tourId);
+        if (existingTour == null) {
+            return Optional.empty();
+        }
+
+        TourDetailDto updatedTour = withComputedAttributes(
+                existingTour,
+                tourAttributeCalculator.calculate(logs),
+                updatedAt,
+                version
+        );
+        toursById.put(tourId, updatedTour);
+        return Optional.of(updatedTour);
+    }
+
+    private TourDetailDto withComputedAttributes(
+            TourDetailDto existingTour,
+            ComputedTourAttributesDto computedAttributes,
+            Instant updatedAt,
+            Long version
+    ) {
+        return new TourDetailDto(
+                existingTour.id(),
+                existingTour.userId(),
+                existingTour.name(),
+                existingTour.description(),
+                existingTour.startLocation(),
+                existingTour.endLocation(),
+                existingTour.transportType(),
+                existingTour.timezoneId(),
+                existingTour.plannedDistanceM(),
+                existingTour.estimatedDurationS(),
+                existingTour.coverImage(),
+                existingTour.route(),
+                computedAttributes,
+                existingTour.createdAt(),
+                updatedAt,
+                version
+        );
+    }
+
     private void deletePreviousCoverImage(Long tourId, CoverImageDto previousCoverImage) {
         try {
             deleteStoredCoverImage(previousCoverImage);
@@ -474,15 +543,7 @@ public class IntermediateTourService {
     }
 
     private ComputedTourAttributesDto defaultComputedAttributes() {
-        return new ComputedTourAttributesDto(
-                0,
-                0,
-                PopularityCategory.NEW,
-                "new",
-                0,
-                ChildFriendlinessCategory.UNKNOWN,
-                "unknown"
-        );
+        return tourAttributeCalculator.calculate(List.of());
     }
 
     private static CoordinateDto coordinate(String latitude, String longitude) {
