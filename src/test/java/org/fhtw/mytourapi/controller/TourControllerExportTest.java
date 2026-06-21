@@ -55,9 +55,15 @@ class TourControllerExportTest {
                 .andExpect(jsonPath("$.exportedAt").isNotEmpty())
                 .andExpect(jsonPath("$.tours.length()").value(4))
                 .andExpect(jsonPath("$.tours[0].tour.name").value("Danube Island Evening Ride"))
-                .andExpect(jsonPath("$.tours[0].tour.route.routeSource").value("OPENROUTESERVICE"))
+                .andExpect(jsonPath("$.tours[0].tour.id").doesNotExist())
+                .andExpect(jsonPath("$.tours[0].tour.userId").doesNotExist())
+                .andExpect(jsonPath("$.tours[0].route.routeSource").value("OPENROUTESERVICE"))
+                .andExpect(jsonPath("$.tours[0].coverImage.path").value("intermediate/danube-island.jpg"))
                 .andExpect(jsonPath("$.tours[0].logs.length()").value(3))
+                .andExpect(jsonPath("$.tours[0].logs[0].log.id").doesNotExist())
+                .andExpect(jsonPath("$.tours[0].logs[0].log.rating").value(5))
                 .andExpect(jsonPath("$.tours[0].logs[0].weather.provider").value("OPEN_METEO"))
+                .andExpect(jsonPath("$.tours[0].logs[0].weather.fetchedAt").isNotEmpty())
                 .andExpect(jsonPath("$.tours[0].logs[0].weather.weatherDescription").value("clear sky"));
     }
 

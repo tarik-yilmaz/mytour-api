@@ -1,7 +1,6 @@
 package org.fhtw.mytourapi.dto;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
 import java.util.List;
@@ -18,7 +17,7 @@ public record ImportedTourDto(
         @Valid
         CoverImageDto coverImage,
 
-        @NotEmpty
+        @NotNull
         List<@Valid ImportedTourLogDto> logs
 ) {
 }

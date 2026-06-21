@@ -31,6 +31,8 @@ public record ImportedWeatherSnapshotDto(
         @Size(max = 120)
         String weatherDescription,
 
-        BigDecimal windSpeedKmh
+        BigDecimal windSpeedKmh,
+
+        Instant fetchedAt
 ) {
 }
