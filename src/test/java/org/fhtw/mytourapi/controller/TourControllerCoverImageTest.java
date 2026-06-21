@@ -5,6 +5,7 @@ import org.fhtw.mytourapi.config.OpenRouteServiceProperties;
 import org.fhtw.mytourapi.exception.ApiErrorResponseFactory;
 import org.fhtw.mytourapi.exception.ApiExceptionHandler;
 import org.fhtw.mytourapi.service.CoverImageStorageService;
+import org.fhtw.mytourapi.service.IntermediateTourSearchIndex;
 import org.fhtw.mytourapi.service.IntermediateTourService;
 import org.fhtw.mytourapi.service.RouteCalculationService;
 import org.fhtw.mytourapi.service.TourAttributeCalculator;
@@ -39,7 +40,8 @@ class TourControllerCoverImageTest {
         tourService = new IntermediateTourService(
                 routeCalculationService(),
                 coverImageStorageService(),
-                new TourAttributeCalculator()
+                new TourAttributeCalculator(),
+                new IntermediateTourSearchIndex()
         );
         mockMvc = MockMvcBuilders
                 .standaloneSetup(new TourController(tourService))

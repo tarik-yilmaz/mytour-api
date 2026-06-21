@@ -4,6 +4,7 @@ import org.fhtw.mytourapi.controller.TourController;
 import org.fhtw.mytourapi.config.ImageStorageProperties;
 import org.fhtw.mytourapi.config.OpenRouteServiceProperties;
 import org.fhtw.mytourapi.service.CoverImageStorageService;
+import org.fhtw.mytourapi.service.IntermediateTourSearchIndex;
 import org.fhtw.mytourapi.service.IntermediateTourService;
 import org.fhtw.mytourapi.service.RouteCalculationService;
 import org.fhtw.mytourapi.service.TourAttributeCalculator;
@@ -92,7 +93,8 @@ class ApiExceptionHandlerTest {
         return new IntermediateTourService(
                 routeCalculationService,
                 new CoverImageStorageService(imageStorageProperties),
-                new TourAttributeCalculator()
+                new TourAttributeCalculator(),
+                new IntermediateTourSearchIndex()
         );
     }
 }

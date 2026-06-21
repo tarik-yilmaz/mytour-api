@@ -56,7 +56,7 @@ public class TourController {
             @RequestParam(required = false) ChildFriendlinessCategory childFriendliness,
             @RequestParam(required = false) @Min(1) @Max(5) Short ratingMin
     ) {
-        return tourService.searchTours(q, transportType, popularity, childFriendliness);
+        return tourService.searchTours(q, transportType, popularity, childFriendliness, ratingMin);
     }
 
     @PostMapping

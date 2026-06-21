@@ -71,7 +71,8 @@ class IntermediateTourServiceCoverImageTest {
         return new IntermediateTourService(
                 routeCalculationService(),
                 coverImageStorageService(),
-                new TourAttributeCalculator()
+                new TourAttributeCalculator(),
+                new IntermediateTourSearchIndex()
         );
     }
 

@@ -177,29 +177,33 @@ public class IntermediateTourService {
     private final RouteCalculationService routeCalculationService;
     private final CoverImageStorageService coverImageStorageService;
     private final TourAttributeCalculator tourAttributeCalculator;
+    private final IntermediateTourSearchIndex tourSearchIndex;
 
     public IntermediateTourService(
             RouteCalculationService routeCalculationService,
             CoverImageStorageService coverImageStorageService,
-            TourAttributeCalculator tourAttributeCalculator
+            TourAttributeCalculator tourAttributeCalculator,
+            IntermediateTourSearchIndex tourSearchIndex
     ) {
         this.routeCalculationService = routeCalculationService;
         this.coverImageStorageService = coverImageStorageService;
         this.tourAttributeCalculator = tourAttributeCalculator;
+        this.tourSearchIndex = tourSearchIndex;
     }
 
     public TourSearchResponse searchTours(
             String query,
             TransportType transportType,
             PopularityCategory popularity,
-            ChildFriendlinessCategory childFriendliness
+            ChildFriendlinessCategory childFriendliness,
+            Short ratingMin
     ) {
         List<TourSummaryDto> tours = toursById.values().stream()
-                .filter((tour) -> matchesQuery(tour, query))
                 .filter((tour) -> transportType == null || tour.transportType() == transportType)
                 .filter((tour) -> popularity == null || tour.computedAttributes().popularityCategory() == popularity)
                 .filter((tour) -> childFriendliness == null
                         || tour.computedAttributes().childFriendlinessCategory() == childFriendliness)
+                .filter((tour) -> tourSearchIndex.matches(tour, query, ratingMin))
                 .map(this::toSummary)
                 .sorted(Comparator.comparing(TourSummaryDto::id))
                 .toList();
@@ -270,6 +274,7 @@ public class IntermediateTourService {
         }
 
         deleteStoredCoverImage(existingTour.coverImage());
+        tourSearchIndex.removeTour(tourId);
         toursById.remove(tourId);
         return true;
     }
@@ -345,25 +350,6 @@ public class IntermediateTourService {
         }
 
         return replaceComputedAttributes(tourId, logs, Instant.now(), nextVersion(existingTour.version()));
-    }
-
-    private boolean matchesQuery(TourDetailDto tour, String query) {
-        if (query == null || query.isBlank()) {
-            return true;
-        }
-
-        String normalizedQuery = query.trim().toLowerCase();
-        String searchableText = String.join(" ",
-                safeText(tour.name()),
-                safeText(tour.description()),
-                safeText(tour.startLocation()),
-                safeText(tour.endLocation()),
-                tour.transportType().name(),
-                safeText(tour.computedAttributes().popularityLabel()),
-                safeText(tour.computedAttributes().childFriendlinessLabel())
-        ).toLowerCase();
-
-        return searchableText.contains(normalizedQuery);
     }
 
     private TourSummaryDto toSummary(TourDetailDto tour) {
@@ -554,7 +540,4 @@ public class IntermediateTourService {
         return new BigDecimal(meters);
     }
 
-    private static String safeText(String value) {
-        return value == null ? "" : value;
-    }
 }

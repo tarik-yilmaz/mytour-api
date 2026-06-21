@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class IntermediateTourLogService {
 
     private final IntermediateTourService tourService;
+    private final IntermediateTourSearchIndex tourSearchIndex;
     private final Map<Long, List<TourLogDto>> logsByTourId = new ConcurrentHashMap<>(Map.of(
             1L, List.of(
                     log(101L, 1L, "2026-05-10T17:45:00Z", "Calm evening ride, light wind, good route for beginners.", 2, "18400", 4380, 5,
@@ -50,9 +51,16 @@ public class IntermediateTourLogService {
     ));
     private final AtomicLong nextLogId = new AtomicLong(401L);
 
-    public IntermediateTourLogService(IntermediateTourService tourService) {
+    public IntermediateTourLogService(
+            IntermediateTourService tourService,
+            IntermediateTourSearchIndex tourSearchIndex
+    ) {
         this.tourService = tourService;
-        logsByTourId.forEach(tourService::initializeComputedAttributes);
+        this.tourSearchIndex = tourSearchIndex;
+        logsByTourId.forEach((tourId, logs) -> {
+            tourService.initializeComputedAttributes(tourId, logs);
+            tourSearchIndex.replaceLogs(tourId, logs);
+        });
     }
 
     public Optional<List<TourLogDto>> listLogs(Long tourId) {
@@ -95,7 +103,7 @@ public class IntermediateTourLogService {
             updatedLogs.add(log);
             return List.copyOf(updatedLogs);
         });
-        refreshTourAttributes(tourId);
+        refreshDerivedTourState(tourId);
 
         return Optional.of(log);
     }
@@ -136,7 +144,7 @@ public class IntermediateTourLogService {
         );
 
         replaceLog(tourId, updatedLog);
-        refreshTourAttributes(tourId);
+        refreshDerivedTourState(tourId);
         return Optional.of(updatedLog);
     }
 
@@ -155,7 +163,7 @@ public class IntermediateTourLogService {
         }
 
         logsByTourId.put(tourId, List.copyOf(updatedLogs));
-        refreshTourAttributes(tourId);
+        refreshDerivedTourState(tourId);
         return true;
     }
 
@@ -188,6 +196,7 @@ public class IntermediateTourLogService {
         );
 
         replaceLog(tourId, updatedLog);
+        refreshTourSearchIndex(tourId);
         return Optional.of(weather);
     }
 
@@ -205,8 +214,14 @@ public class IntermediateTourLogService {
         logsByTourId.put(tourId, List.copyOf(updatedLogs));
     }
 
-    private void refreshTourAttributes(Long tourId) {
-        tourService.refreshComputedAttributes(tourId, logsByTourId.getOrDefault(tourId, List.of()));
+    private void refreshDerivedTourState(Long tourId) {
+        List<TourLogDto> logs = logsByTourId.getOrDefault(tourId, List.of());
+        tourService.refreshComputedAttributes(tourId, logs);
+        tourSearchIndex.replaceLogs(tourId, logs);
+    }
+
+    private void refreshTourSearchIndex(Long tourId) {
+        tourSearchIndex.replaceLogs(tourId, logsByTourId.getOrDefault(tourId, List.of()));
     }
 
     private TourLogWeatherDto generatedWeather(

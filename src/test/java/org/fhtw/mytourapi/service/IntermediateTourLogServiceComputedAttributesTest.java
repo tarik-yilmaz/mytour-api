@@ -23,8 +23,9 @@ class IntermediateTourLogServiceComputedAttributesTest {
 
     @Test
     void createAndDeleteLogRefreshesComputedTourAttributes() {
-        IntermediateTourService tourService = tourService();
-        IntermediateTourLogService logService = new IntermediateTourLogService(tourService);
+        IntermediateTourSearchIndex tourSearchIndex = new IntermediateTourSearchIndex();
+        IntermediateTourService tourService = tourService(tourSearchIndex);
+        IntermediateTourLogService logService = new IntermediateTourLogService(tourService, tourSearchIndex);
 
         assertThat(tourService.getTour(4L).orElseThrow().computedAttributes().logCount()).isZero();
 
@@ -55,8 +56,9 @@ class IntermediateTourLogServiceComputedAttributesTest {
 
     @Test
     void updateLogRefreshesComputedTourAttributes() {
-        IntermediateTourService tourService = tourService();
-        IntermediateTourLogService logService = new IntermediateTourLogService(tourService);
+        IntermediateTourSearchIndex tourSearchIndex = new IntermediateTourSearchIndex();
+        IntermediateTourService tourService = tourService(tourSearchIndex);
+        IntermediateTourLogService logService = new IntermediateTourLogService(tourService, tourSearchIndex);
 
         assertThat(tourService.getTour(2L).orElseThrow().computedAttributes().childFriendlinessCategory())
                 .isEqualTo(ChildFriendlinessCategory.CHALLENGING_ROUTE);
@@ -81,11 +83,12 @@ class IntermediateTourLogServiceComputedAttributesTest {
         assertThat(afterUpdate.childFriendlinessLabel()).isEqualTo("family friendly");
     }
 
-    private IntermediateTourService tourService() {
+    private IntermediateTourService tourService(IntermediateTourSearchIndex tourSearchIndex) {
         return new IntermediateTourService(
                 routeCalculationService(),
                 coverImageStorageService(),
-                new TourAttributeCalculator()
+                new TourAttributeCalculator(),
+                tourSearchIndex
         );
     }
 
