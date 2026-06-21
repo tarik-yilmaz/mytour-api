@@ -215,6 +215,12 @@ public class IntermediateTourService {
         return Optional.ofNullable(toursById.get(tourId));
     }
 
+    public List<TourDetailDto> listToursForExport() {
+        return toursById.values().stream()
+                .sorted(Comparator.comparing(TourDetailDto::id))
+                .toList();
+    }
+
     public TourDetailDto createTour(CreateTourRequest request) {
         Long tourId = nextTourId.getAndIncrement();
         Instant now = Instant.now();

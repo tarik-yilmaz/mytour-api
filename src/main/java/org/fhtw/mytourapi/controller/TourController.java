@@ -18,6 +18,7 @@ import org.fhtw.mytourapi.dto.TourSearchResponse;
 import org.fhtw.mytourapi.dto.TransportType;
 import org.fhtw.mytourapi.dto.UpdateTourRequest;
 import org.fhtw.mytourapi.service.IntermediateTourService;
+import org.fhtw.mytourapi.service.TourExportService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
@@ -42,9 +43,14 @@ import org.springframework.web.server.ResponseStatusException;
 public class TourController {
 
     private final IntermediateTourService tourService;
+    private final TourExportService tourExportService;
 
-    public TourController(IntermediateTourService tourService) {
+    public TourController(
+            IntermediateTourService tourService,
+            TourExportService tourExportService
+    ) {
         this.tourService = tourService;
+        this.tourExportService = tourExportService;
     }
 
     @GetMapping
@@ -121,7 +127,7 @@ public class TourController {
     @GetMapping("/export")
     @Operation(summary = "Export the authenticated user's tours, route geometry, logs, and weather snapshots.")
     public TourExportDto exportTours() {
-        return notImplemented();
+        return tourExportService.exportTours();
     }
 
     @PostMapping("/import")

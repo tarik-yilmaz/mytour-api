@@ -75,6 +75,12 @@ public class IntermediateTourLogService {
         return Optional.of(logs);
     }
 
+    public List<TourLogDto> listLogsForExport(Long tourId) {
+        return logsByTourId.getOrDefault(tourId, List.of()).stream()
+                .sorted(Comparator.comparing(TourLogDto::performedAt).thenComparing(TourLogDto::id))
+                .toList();
+    }
+
     public Optional<TourLogDto> createLog(Long tourId, CreateTourLogRequest request) {
         Optional<TourDetailDto> tour = tourService.getTour(tourId);
         if (tour.isEmpty()) {

@@ -4,10 +4,12 @@ import org.fhtw.mytourapi.controller.TourController;
 import org.fhtw.mytourapi.config.ImageStorageProperties;
 import org.fhtw.mytourapi.config.OpenRouteServiceProperties;
 import org.fhtw.mytourapi.service.CoverImageStorageService;
+import org.fhtw.mytourapi.service.IntermediateTourLogService;
 import org.fhtw.mytourapi.service.IntermediateTourSearchIndex;
 import org.fhtw.mytourapi.service.IntermediateTourService;
 import org.fhtw.mytourapi.service.RouteCalculationService;
 import org.fhtw.mytourapi.service.TourAttributeCalculator;
+import org.fhtw.mytourapi.service.TourExportService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -31,8 +33,11 @@ class ApiExceptionHandlerTest {
 
     @BeforeEach
     void setUp() {
+        IntermediateTourSearchIndex tourSearchIndex = new IntermediateTourSearchIndex();
+        IntermediateTourService tourService = intermediateTourService(tourSearchIndex);
+        IntermediateTourLogService tourLogService = new IntermediateTourLogService(tourService, tourSearchIndex);
         mockMvc = MockMvcBuilders
-                .standaloneSetup(new TourController(intermediateTourService()))
+                .standaloneSetup(new TourController(tourService, new TourExportService(tourService, tourLogService)))
                 .setControllerAdvice(new ApiExceptionHandler(new ApiErrorResponseFactory()))
                 .build();
     }
@@ -74,7 +79,7 @@ class ApiExceptionHandlerTest {
                 .andExpect(jsonPath("$.validationErrors", hasItem(containsString("transportType"))));
     }
 
-    private IntermediateTourService intermediateTourService() {
+    private IntermediateTourService intermediateTourService(IntermediateTourSearchIndex tourSearchIndex) {
         OpenRouteServiceProperties properties = new OpenRouteServiceProperties();
         RouteCalculationService routeCalculationService = new RouteCalculationService(
                 properties,
@@ -94,7 +99,7 @@ class ApiExceptionHandlerTest {
                 routeCalculationService,
                 new CoverImageStorageService(imageStorageProperties),
                 new TourAttributeCalculator(),
-                new IntermediateTourSearchIndex()
+                tourSearchIndex
         );
     }
 }
