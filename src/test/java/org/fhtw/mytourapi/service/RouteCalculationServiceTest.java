@@ -6,6 +6,9 @@ import org.fhtw.mytourapi.dto.CoordinateDto;
 import org.fhtw.mytourapi.dto.TourRouteDto;
 import org.fhtw.mytourapi.dto.TransportType;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -13,6 +16,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@ExtendWith(OutputCaptureExtension.class)
 class RouteCalculationServiceTest {
 
     private static final CoordinateDto START = coordinate("48.2082", "16.3738");
@@ -20,7 +24,7 @@ class RouteCalculationServiceTest {
     private static final Instant FETCHED_AT = Instant.parse("2026-06-21T10:00:00Z");
 
     @Test
-    void calculateRouteUsesFallbackWhenApiKeyIsMissing() {
+    void calculateRouteUsesFallbackWhenApiKeyIsMissing(CapturedOutput output) {
         AtomicBoolean clientCalled = new AtomicBoolean(false);
         RouteCalculationService service = new RouteCalculationService(
                 new OpenRouteServiceProperties(),
@@ -38,6 +42,11 @@ class RouteCalculationServiceTest {
         assertThat(result.route().routeSource()).isEqualTo("INTERMEDIATE");
         assertThat(result.route().routeProfile()).isEqualTo("cycling-regular");
         assertThat(result.route().routeGeometry().path("type").asText()).isEqualTo("FeatureCollection");
+        assertThat(output).contains(
+                "Using local fallback route calculation",
+                "transportType=BIKE",
+                "profile=cycling-regular"
+        );
     }
 
     @Test

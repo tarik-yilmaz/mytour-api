@@ -9,6 +9,8 @@ import org.fhtw.mytourapi.dto.TourDetailDto;
 import org.fhtw.mytourapi.dto.TourImportRequest;
 import org.fhtw.mytourapi.dto.TourRouteDto;
 import org.fhtw.mytourapi.exception.ImportValidationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -20,6 +22,7 @@ import java.util.List;
 @Service
 public class TourImportService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(TourImportService.class);
     private static final int SUPPORTED_SCHEMA_VERSION = 1;
 
     private final IntermediateTourService tourService;
@@ -36,6 +39,7 @@ public class TourImportService {
     public ImportResultDto importTours(TourImportRequest request) {
         List<String> validationErrors = validate(request);
         if (!validationErrors.isEmpty()) {
+            LOGGER.debug("Rejected tour import validationErrorCount={}", validationErrors.size());
             throw new ImportValidationException(validationErrors);
         }
 
@@ -50,6 +54,7 @@ public class TourImportService {
                     .size();
         }
 
+        LOGGER.info("Imported tours importedTourCount={} importedLogCount={}", createdTourIds.size(), importedLogs);
         return new ImportResultDto(createdTourIds.size(), importedLogs, List.copyOf(createdTourIds));
     }
 

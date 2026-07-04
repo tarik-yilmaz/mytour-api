@@ -8,6 +8,8 @@ import org.fhtw.mytourapi.dto.TourDetailDto;
 import org.fhtw.mytourapi.dto.TourLogDto;
 import org.fhtw.mytourapi.dto.TourLogWeatherDto;
 import org.fhtw.mytourapi.dto.UpdateTourLogRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +26,8 @@ import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 public class IntermediateTourLogService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(IntermediateTourLogService.class);
 
     private final IntermediateTourService tourService;
     private final IntermediateTourSearchIndex tourSearchIndex;
@@ -67,6 +71,7 @@ public class IntermediateTourLogService {
             tourService.initializeComputedAttributes(tourId, logs);
             tourSearchIndex.replaceLogs(tourId, logs);
         });
+        LOGGER.info("Initialized intermediate tour log store tourCount={}", logsByTourId.size());
     }
 
     public IntermediateTourLogService(
@@ -123,6 +128,12 @@ public class IntermediateTourLogService {
             return List.copyOf(updatedLogs);
         });
         refreshDerivedTourState(tourId);
+        LOGGER.info(
+                "Created intermediate tour log tourId={} logId={} weatherProvider={}",
+                tourId,
+                logId,
+                log.weather() == null ? null : log.weather().provider()
+        );
 
         return Optional.of(log);
     }
@@ -143,6 +154,7 @@ public class IntermediateTourLogService {
             return List.copyOf(updatedLogs);
         });
         refreshDerivedTourState(tourId);
+        LOGGER.info("Imported intermediate tour logs tourId={} count={}", tourId, logs.size());
 
         return Optional.of(logs);
     }
@@ -184,6 +196,7 @@ public class IntermediateTourLogService {
 
         replaceLog(tourId, updatedLog);
         refreshDerivedTourState(tourId);
+        LOGGER.info("Updated intermediate tour log tourId={} logId={} version={}", tourId, logId, updatedLog.version());
         return Optional.of(updatedLog);
     }
 
@@ -203,6 +216,7 @@ public class IntermediateTourLogService {
 
         logsByTourId.put(tourId, List.copyOf(updatedLogs));
         refreshDerivedTourState(tourId);
+        LOGGER.info("Deleted intermediate tour log tourId={} logId={}", tourId, logId);
         return true;
     }
 
@@ -236,6 +250,7 @@ public class IntermediateTourLogService {
 
         replaceLog(tourId, updatedLog);
         refreshTourSearchIndex(tourId);
+        LOGGER.info("Refreshed intermediate tour log weather tourId={} logId={} provider={}", tourId, logId, weather.provider());
         return Optional.of(weather);
     }
 

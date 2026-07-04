@@ -9,6 +9,8 @@ import org.fhtw.mytourapi.config.OpenRouteServiceProperties;
 import org.fhtw.mytourapi.dto.CoordinateDto;
 import org.fhtw.mytourapi.dto.TourRouteDto;
 import org.fhtw.mytourapi.dto.TransportType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -18,6 +20,7 @@ import java.time.Instant;
 @Service
 public class RouteCalculationService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(RouteCalculationService.class);
     private static final String FALLBACK_ROUTE_SOURCE = "INTERMEDIATE";
 
     private final OpenRouteServiceProperties properties;
@@ -39,9 +42,11 @@ public class RouteCalculationService {
     ) {
         String profile = properties.profileFor(transportType);
         if (properties.shouldUseApi()) {
+            LOGGER.debug("Delegating route calculation to OpenRouteService transportType={} profile={}", transportType, profile);
             return directionsClient.fetchRoute(profile, startCoordinate, endCoordinate, fetchedAt);
         }
 
+        LOGGER.info("Using local fallback route calculation transportType={} profile={}", transportType, profile);
         return fallbackRoute(profile, transportType, startCoordinate, endCoordinate, fetchedAt);
     }
 

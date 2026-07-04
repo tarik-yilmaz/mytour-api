@@ -209,6 +209,15 @@ public class IntermediateTourService {
                 .sorted(Comparator.comparing(TourSummaryDto::id))
                 .toList();
 
+        LOGGER.debug(
+                "Searched intermediate tours resultCount={} hasQuery={} transportType={} popularity={} childFriendliness={} ratingMin={}",
+                tours.size(),
+                query != null && !query.isBlank(),
+                transportType,
+                popularity,
+                childFriendliness,
+                ratingMin
+        );
         return new TourSearchResponse(tours, tours.size());
     }
 
@@ -243,6 +252,12 @@ public class IntermediateTourService {
         );
 
         toursById.put(tourId, tour);
+        LOGGER.info(
+                "Created intermediate tour tourId={} transportType={} routeSource={}",
+                tourId,
+                tour.transportType(),
+                tour.route().routeSource()
+        );
         return tour;
     }
 
@@ -270,6 +285,11 @@ public class IntermediateTourService {
         );
 
         toursById.put(tourId, tour);
+        LOGGER.info(
+                "Imported intermediate tour tourId={} routeSource={}",
+                tourId,
+                tour.route() == null ? null : tour.route().routeSource()
+        );
         return tour;
     }
 
@@ -298,6 +318,7 @@ public class IntermediateTourService {
         );
 
         toursById.put(tourId, updatedTour);
+        LOGGER.info("Updated intermediate tour tourId={} version={}", tourId, updatedTour.version());
         return Optional.of(updatedTour);
     }
 
@@ -310,6 +331,7 @@ public class IntermediateTourService {
         deleteStoredCoverImage(existingTour.coverImage());
         tourSearchIndex.removeTour(tourId);
         toursById.remove(tourId);
+        LOGGER.info("Deleted intermediate tour tourId={}", tourId);
         return true;
     }
 
@@ -334,6 +356,11 @@ public class IntermediateTourService {
         TourDetailDto updatedTour = withCalculatedRoute(existingTour, calculatedRoute, now);
 
         toursById.put(tourId, updatedTour);
+        LOGGER.info(
+                "Refreshed intermediate tour route tourId={} routeSource={}",
+                tourId,
+                calculatedRoute.route().routeSource()
+        );
         return Optional.of(calculatedRoute.route());
     }
 
@@ -350,6 +377,12 @@ public class IntermediateTourService {
 
         toursById.put(tourId, updatedTour);
         deletePreviousCoverImage(tourId, previousCoverImage);
+        LOGGER.info(
+                "Updated intermediate tour cover image tourId={} contentType={} sizeBytes={}",
+                tourId,
+                storedCoverImage.contentType(),
+                storedCoverImage.sizeBytes()
+        );
         return Optional.of(storedCoverImage);
     }
 
@@ -365,6 +398,7 @@ public class IntermediateTourService {
 
         deleteStoredCoverImage(existingTour.coverImage());
         toursById.put(tourId, withCoverImage(existingTour, null, Instant.now()));
+        LOGGER.info("Deleted intermediate tour cover image tourId={}", tourId);
         return true;
     }
 
@@ -515,6 +549,7 @@ public class IntermediateTourService {
                 version
         );
         toursById.put(tourId, updatedTour);
+        LOGGER.debug("Refreshed computed attributes for intermediate tour tourId={} logCount={}", tourId, logs.size());
         return Optional.of(updatedTour);
     }
 

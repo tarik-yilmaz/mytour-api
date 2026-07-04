@@ -3,6 +3,8 @@ package org.fhtw.mytourapi.service;
 import org.fhtw.mytourapi.config.ImageStorageProperties;
 import org.fhtw.mytourapi.dto.CoverImageDto;
 import org.fhtw.mytourapi.exception.FileStorageException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -18,6 +20,7 @@ import java.util.UUID;
 @Service
 public class CoverImageStorageService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(CoverImageStorageService.class);
     private static final String COVER_DIRECTORY = "covers";
     private static final int MAX_STORED_FILENAME_LENGTH = 140;
 
@@ -46,12 +49,18 @@ public class CoverImageStorageService {
         }
 
         String storedPath = rootDirectory.relativize(target).toString().replace('\\', '/');
-        return new CoverImageDto(
+        CoverImageDto coverImage = new CoverImageDto(
                 storedPath,
                 originalFilename,
                 normalizedContentType(file.getContentType()),
                 file.getSize()
         );
+        LOGGER.info(
+                "Stored cover image file contentType={} sizeBytes={}",
+                coverImage.contentType(),
+                coverImage.sizeBytes()
+        );
+        return coverImage;
     }
 
     public void delete(String storedPath) {
@@ -62,7 +71,8 @@ public class CoverImageStorageService {
         Path rootDirectory = rootDirectory();
         Path target = resolveStoredPath(rootDirectory, storedPath);
         try {
-            Files.deleteIfExists(target);
+            boolean deleted = Files.deleteIfExists(target);
+            LOGGER.info("Deleted cover image file deleted={}", deleted);
         } catch (IOException exception) {
             throw FileStorageException.internal("Could not delete cover image file.", exception);
         }

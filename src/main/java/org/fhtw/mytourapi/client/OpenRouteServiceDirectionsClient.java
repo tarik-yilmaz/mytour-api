@@ -8,6 +8,8 @@ import org.fhtw.mytourapi.dto.CoordinateDto;
 import org.fhtw.mytourapi.dto.TourRouteDto;
 import org.fhtw.mytourapi.exception.UpstreamServiceException;
 import org.fhtw.mytourapi.service.CalculatedRoute;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -19,6 +21,7 @@ import org.springframework.web.client.RestClientResponseException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +29,7 @@ import java.util.Map;
 @Component
 public class OpenRouteServiceDirectionsClient implements RouteDirectionsClient {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(OpenRouteServiceDirectionsClient.class);
     private static final String ROUTE_SOURCE = "OPENROUTESERVICE";
 
     private final RestClient openRouteServiceRestClient;
@@ -47,6 +51,7 @@ public class OpenRouteServiceDirectionsClient implements RouteDirectionsClient {
             CoordinateDto endCoordinate,
             Instant fetchedAt
     ) {
+        Instant requestStartedAt = Instant.now();
         try {
             String response = openRouteServiceRestClient.post()
                     .uri("/v2/directions/{profile}/geojson", profile)
@@ -57,10 +62,29 @@ public class OpenRouteServiceDirectionsClient implements RouteDirectionsClient {
                     .retrieve()
                     .body(String.class);
 
-            return toCalculatedRoute(profile, startCoordinate, endCoordinate, fetchedAt, response);
+            CalculatedRoute route = toCalculatedRoute(profile, startCoordinate, endCoordinate, fetchedAt, response);
+            LOGGER.info(
+                    "OpenRouteService route lookup succeeded profile={} distanceM={} durationS={} latencyMs={}",
+                    profile,
+                    route.distanceM(),
+                    route.durationS(),
+                    Duration.between(requestStartedAt, Instant.now()).toMillis()
+            );
+            return route;
         } catch (RestClientResponseException exception) {
+            LOGGER.warn(
+                    "OpenRouteService route lookup returned HTTP error profile={} status={} failureClass={}",
+                    profile,
+                    exception.getStatusCode().value(),
+                    exception.getClass().getSimpleName()
+            );
             throw responseException(exception);
         } catch (RestClientException exception) {
+            LOGGER.warn(
+                    "OpenRouteService route lookup failed profile={} failureClass={}",
+                    profile,
+                    exception.getClass().getSimpleName()
+            );
             throw new UpstreamServiceException(
                     HttpStatus.SERVICE_UNAVAILABLE,
                     "OpenRouteService is currently unavailable.",

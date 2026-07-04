@@ -42,6 +42,12 @@ public class ApiExceptionHandler {
             HttpServletRequest request
     ) {
         HttpStatusCode statusCode = exception.getStatusCode();
+        if (statusCode.is5xxServerError()) {
+            LOGGER.error("Response status exception at {} status={}", request.getRequestURI(), statusCode, exception);
+        } else {
+            LOGGER.debug("Response status exception at {} status={}", request.getRequestURI(), statusCode);
+        }
+
         return errorResponseFactory.create(
                 statusCode,
                 messageOrDefault(exception.getReason(), errorResponseFactory.reasonPhrase(statusCode)),
@@ -55,6 +61,13 @@ public class ApiExceptionHandler {
             UpstreamServiceException exception,
             HttpServletRequest request
     ) {
+        LOGGER.warn(
+                "Upstream service exception at {} status={} failureClass={}",
+                request.getRequestURI(),
+                exception.status(),
+                exception.getCause() == null ? exception.getClass().getSimpleName() : exception.getCause().getClass().getSimpleName()
+        );
+
         return errorResponseFactory.create(
                 exception.status(),
                 exception.getMessage(),
@@ -85,6 +98,7 @@ public class ApiExceptionHandler {
             ImportValidationException exception,
             HttpServletRequest request
     ) {
+        LOGGER.debug("Import validation exception at {} validationErrorCount={}", request.getRequestURI(), exception.validationErrors().size());
         return errorResponseFactory.create(
                 HttpStatus.BAD_REQUEST,
                 exception.getMessage(),
@@ -106,6 +120,11 @@ public class ApiExceptionHandler {
                 .map(ApiExceptionHandler::formatObjectError)
                 .toList();
 
+        LOGGER.debug(
+                "Request body validation failed at {} validationErrorCount={}",
+                request.getRequestURI(),
+                validationErrors.size() + globalErrors.size()
+        );
         return errorResponseFactory.create(
                 HttpStatus.BAD_REQUEST,
                 VALIDATION_FAILED,
@@ -126,6 +145,7 @@ public class ApiExceptionHandler {
                 .sorted()
                 .toList();
 
+        LOGGER.debug("Handler method validation failed at {} validationErrorCount={}", request.getRequestURI(), validationErrors.size());
         return errorResponseFactory.create(HttpStatus.BAD_REQUEST, VALIDATION_FAILED, request, validationErrors);
     }
 
@@ -139,6 +159,7 @@ public class ApiExceptionHandler {
                 .sorted()
                 .toList();
 
+        LOGGER.debug("Constraint validation failed at {} validationErrorCount={}", request.getRequestURI(), validationErrors.size());
         return errorResponseFactory.create(HttpStatus.BAD_REQUEST, VALIDATION_FAILED, request, validationErrors);
     }
 
@@ -148,6 +169,7 @@ public class ApiExceptionHandler {
             MethodArgumentTypeMismatchException.class
     })
     public ResponseEntity<ApiErrorResponse> handleBadRequest(Exception exception, HttpServletRequest request) {
+        LOGGER.debug("Malformed API request at {} failureClass={}", request.getRequestURI(), exception.getClass().getSimpleName());
         return errorResponseFactory.create(HttpStatus.BAD_REQUEST, badRequestMessage(exception), request, List.of());
     }
 

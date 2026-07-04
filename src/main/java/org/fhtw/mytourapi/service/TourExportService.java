@@ -10,6 +10,8 @@ import org.fhtw.mytourapi.dto.TourExportDto;
 import org.fhtw.mytourapi.dto.TourLogDto;
 import org.fhtw.mytourapi.dto.TourLogWeatherDto;
 import org.fhtw.mytourapi.dto.TourRouteDto;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -18,6 +20,7 @@ import java.util.List;
 @Service
 public class TourExportService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(TourExportService.class);
     private static final int SCHEMA_VERSION = 1;
 
     private final IntermediateTourService tourService;
@@ -36,6 +39,7 @@ public class TourExportService {
                 .map(this::toExportedTour)
                 .toList();
 
+        LOGGER.info("Exported tours tourCount={}", exportedTours.size());
         return new TourExportDto(SCHEMA_VERSION, Instant.now(), exportedTours);
     }
 

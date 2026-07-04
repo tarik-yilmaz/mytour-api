@@ -7,6 +7,8 @@ import org.fhtw.mytourapi.config.OpenMeteoProperties;
 import org.fhtw.mytourapi.dto.CoordinateDto;
 import org.fhtw.mytourapi.dto.TourLogWeatherDto;
 import org.fhtw.mytourapi.exception.UpstreamServiceException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -16,6 +18,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -26,6 +29,7 @@ import java.time.temporal.ChronoUnit;
 @Component
 public class OpenMeteoWeatherClient implements WeatherSnapshotClient {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(OpenMeteoWeatherClient.class);
     private static final String PROVIDER = "OPEN_METEO";
     private static final String ARCHIVE_DATASET = "historical-hourly";
     private static final String FORECAST_DATASET = "forecast-hourly";
@@ -61,6 +65,12 @@ public class OpenMeteoWeatherClient implements WeatherSnapshotClient {
             try {
                 return fetchFrom(archiveRestClient, "/v1/archive", ARCHIVE_DATASET, tourLogId, lookupCoordinate, observedAt, fetchedAt);
             } catch (UpstreamServiceException exception) {
+                LOGGER.info(
+                        "Open-Meteo archive lookup failed; trying eligible fallback if available tourLogId={} observedAt={} status={}",
+                        tourLogId,
+                        observedAt,
+                        exception.status()
+                );
                 archiveFailure = exception;
             }
         }
@@ -72,6 +82,13 @@ public class OpenMeteoWeatherClient implements WeatherSnapshotClient {
                 if (archiveFailure == null) {
                     throw exception;
                 }
+                LOGGER.warn(
+                        "Open-Meteo forecast fallback failed after archive failure tourLogId={} observedAt={} archiveStatus={} forecastStatus={}",
+                        tourLogId,
+                        observedAt,
+                        archiveFailure.status(),
+                        exception.status()
+                );
             }
         }
 
@@ -95,6 +112,7 @@ public class OpenMeteoWeatherClient implements WeatherSnapshotClient {
             Instant fetchedAt
     ) {
         LocalDate observedDate = LocalDateTime.ofInstant(observedAt, ZoneOffset.UTC).toLocalDate();
+        Instant requestStartedAt = Instant.now();
 
         try {
             String response = restClient.get()
@@ -114,10 +132,31 @@ public class OpenMeteoWeatherClient implements WeatherSnapshotClient {
                     .retrieve()
                     .body(String.class);
 
-            return toWeatherSnapshot(dataset, tourLogId, lookupCoordinate, observedAt, fetchedAt, response);
+            TourLogWeatherDto weather = toWeatherSnapshot(dataset, tourLogId, lookupCoordinate, observedAt, fetchedAt, response);
+            LOGGER.info(
+                    "Open-Meteo weather lookup succeeded dataset={} tourLogId={} observedAt={} latencyMs={}",
+                    dataset,
+                    tourLogId,
+                    observedAt,
+                    Duration.between(requestStartedAt, Instant.now()).toMillis()
+            );
+            return weather;
         } catch (RestClientResponseException exception) {
+            LOGGER.warn(
+                    "Open-Meteo weather lookup returned HTTP error dataset={} tourLogId={} status={} failureClass={}",
+                    dataset,
+                    tourLogId,
+                    exception.getStatusCode().value(),
+                    exception.getClass().getSimpleName()
+            );
             throw responseException(exception);
         } catch (RestClientException exception) {
+            LOGGER.warn(
+                    "Open-Meteo weather lookup failed dataset={} tourLogId={} failureClass={}",
+                    dataset,
+                    tourLogId,
+                    exception.getClass().getSimpleName()
+            );
             throw new UpstreamServiceException(
                     HttpStatus.SERVICE_UNAVAILABLE,
                     "Open-Meteo is currently unavailable.",
