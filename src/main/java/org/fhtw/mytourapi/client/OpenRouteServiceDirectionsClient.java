@@ -7,7 +7,6 @@ import org.fhtw.mytourapi.config.OpenRouteServiceProperties;
 import org.fhtw.mytourapi.dto.CoordinateDto;
 import org.fhtw.mytourapi.dto.TourRouteDto;
 import org.fhtw.mytourapi.exception.UpstreamServiceException;
-import org.fhtw.mytourapi.service.CalculatedRoute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -45,7 +44,7 @@ public class OpenRouteServiceDirectionsClient implements RouteDirectionsClient {
     }
 
     @Override
-    public CalculatedRoute fetchRoute(
+    public RouteDirectionsResult fetchRoute(
             String profile,
             CoordinateDto startCoordinate,
             CoordinateDto endCoordinate,
@@ -62,7 +61,7 @@ public class OpenRouteServiceDirectionsClient implements RouteDirectionsClient {
                     .retrieve()
                     .body(String.class);
 
-            CalculatedRoute route = toCalculatedRoute(profile, startCoordinate, endCoordinate, fetchedAt, response);
+            RouteDirectionsResult route = toCalculatedRoute(profile, startCoordinate, endCoordinate, fetchedAt, response);
             LOGGER.info(
                     "OpenRouteService route lookup succeeded profile={} distanceM={} durationS={} latencyMs={}",
                     profile,
@@ -93,7 +92,7 @@ public class OpenRouteServiceDirectionsClient implements RouteDirectionsClient {
         }
     }
 
-    CalculatedRoute toCalculatedRoute(
+    RouteDirectionsResult toCalculatedRoute(
             String profile,
             CoordinateDto startCoordinate,
             CoordinateDto endCoordinate,
@@ -127,7 +126,7 @@ public class OpenRouteServiceDirectionsClient implements RouteDirectionsClient {
                 fetchedAt
         );
 
-        return new CalculatedRoute(route, distanceM, durationS);
+        return new RouteDirectionsResult(route, distanceM, durationS);
     }
 
     private JsonNode parseResponse(String response) {

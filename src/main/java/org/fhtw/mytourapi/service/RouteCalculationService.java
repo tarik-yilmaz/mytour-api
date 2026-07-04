@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.fhtw.mytourapi.client.RouteDirectionsClient;
+import org.fhtw.mytourapi.client.RouteDirectionsResult;
 import org.fhtw.mytourapi.config.OpenRouteServiceProperties;
 import org.fhtw.mytourapi.dto.CoordinateDto;
 import org.fhtw.mytourapi.dto.TourRouteDto;
@@ -43,7 +44,8 @@ public class RouteCalculationService {
         String profile = properties.profileFor(transportType);
         if (properties.shouldUseApi()) {
             LOGGER.debug("Delegating route calculation to OpenRouteService transportType={} profile={}", transportType, profile);
-            return directionsClient.fetchRoute(profile, startCoordinate, endCoordinate, fetchedAt);
+            RouteDirectionsResult route = directionsClient.fetchRoute(profile, startCoordinate, endCoordinate, fetchedAt);
+            return new CalculatedRoute(route.route(), route.distanceM(), route.durationS());
         }
 
         LOGGER.info("Using local fallback route calculation transportType={} profile={}", transportType, profile);

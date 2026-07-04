@@ -1,6 +1,7 @@
 package org.fhtw.mytourapi.service;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import org.fhtw.mytourapi.client.RouteDirectionsResult;
 import org.fhtw.mytourapi.config.OpenRouteServiceProperties;
 import org.fhtw.mytourapi.dto.CoordinateDto;
 import org.fhtw.mytourapi.dto.TourRouteDto;
@@ -71,7 +72,7 @@ class RouteCalculationServiceTest {
                     assertThat(startCoordinate).isEqualTo(START);
                     assertThat(endCoordinate).isEqualTo(END);
                     assertThat(fetchedAt).isEqualTo(FETCHED_AT);
-                    return new CalculatedRoute(route, new BigDecimal("1234.5"), 987);
+                    return new RouteDirectionsResult(route, new BigDecimal("1234.5"), 987);
                 }
         );
 

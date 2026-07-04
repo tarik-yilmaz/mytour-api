@@ -2,7 +2,6 @@ package org.fhtw.mytourapi.client;
 
 import org.fhtw.mytourapi.config.OpenRouteServiceProperties;
 import org.fhtw.mytourapi.dto.CoordinateDto;
-import org.fhtw.mytourapi.service.CalculatedRoute;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -64,7 +63,7 @@ class OpenRouteServiceDirectionsClientTest {
                         }
                         """, MediaType.APPLICATION_JSON));
 
-        CalculatedRoute result = client.fetchRoute(
+        RouteDirectionsResult result = client.fetchRoute(
                 "cycling-regular",
                 coordinate("48.2082", "16.3738"),
                 coordinate("48.2500", "16.4000"),
