@@ -5,19 +5,25 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 import org.fhtw.mytourapi.dto.ChildFriendlinessCategory;
 import org.fhtw.mytourapi.dto.CoverImageDto;
 import org.fhtw.mytourapi.dto.CreateTourRequest;
 import org.fhtw.mytourapi.dto.ImportResultDto;
+import org.fhtw.mytourapi.dto.LocationSuggestionDto;
 import org.fhtw.mytourapi.dto.PopularityCategory;
+import org.fhtw.mytourapi.dto.TimezoneSuggestionDto;
 import org.fhtw.mytourapi.dto.TourDetailDto;
 import org.fhtw.mytourapi.dto.TourExportDto;
 import org.fhtw.mytourapi.dto.TourImportRequest;
 import org.fhtw.mytourapi.dto.TourRouteDto;
 import org.fhtw.mytourapi.dto.TourSearchResponse;
 import org.fhtw.mytourapi.dto.TransportType;
+import org.fhtw.mytourapi.dto.TourSuggestionDto;
 import org.fhtw.mytourapi.dto.UpdateTourRequest;
 import org.fhtw.mytourapi.service.IntermediateTourService;
+import org.fhtw.mytourapi.service.LocationSuggestionService;
+import org.fhtw.mytourapi.service.TimezoneSuggestionService;
 import org.fhtw.mytourapi.service.TourExportService;
 import org.fhtw.mytourapi.service.TourImportService;
 import org.springframework.http.HttpStatus;
@@ -37,6 +43,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
+
 @Validated
 @RestController
 @RequestMapping("/api/tours")
@@ -46,15 +54,21 @@ public class TourController {
     private final IntermediateTourService tourService;
     private final TourExportService tourExportService;
     private final TourImportService tourImportService;
+    private final LocationSuggestionService locationSuggestionService;
+    private final TimezoneSuggestionService timezoneSuggestionService;
 
     public TourController(
             IntermediateTourService tourService,
             TourExportService tourExportService,
-            TourImportService tourImportService
+            TourImportService tourImportService,
+            LocationSuggestionService locationSuggestionService,
+            TimezoneSuggestionService timezoneSuggestionService
     ) {
         this.tourService = tourService;
         this.tourExportService = tourExportService;
         this.tourImportService = tourImportService;
+        this.locationSuggestionService = locationSuggestionService;
+        this.timezoneSuggestionService = timezoneSuggestionService;
     }
 
     @GetMapping
@@ -67,6 +81,33 @@ public class TourController {
             @RequestParam(required = false) @Min(1) @Max(5) Short ratingMin
     ) {
         return tourService.searchTours(q, transportType, popularity, childFriendliness, ratingMin);
+    }
+
+    @GetMapping("/suggestions")
+    @Operation(summary = "Suggest user-owned tours for autocomplete search.")
+    public List<TourSuggestionDto> suggestTours(
+            @RequestParam @Size(max = 120) String q,
+            @RequestParam(defaultValue = "8") @Min(1) @Max(20) Integer limit
+    ) {
+        return tourService.suggestTours(q, limit);
+    }
+
+    @GetMapping("/location-suggestions")
+    @Operation(summary = "Suggest route locations and coordinates for tour forms.")
+    public List<LocationSuggestionDto> suggestLocations(
+            @RequestParam @Size(max = 255) String q,
+            @RequestParam(defaultValue = "6") @Min(1) @Max(10) Integer limit
+    ) {
+        return locationSuggestionService.suggestLocations(q, limit);
+    }
+
+    @GetMapping("/timezone-suggestions")
+    @Operation(summary = "Suggest IANA timezone ids for tour forms.")
+    public List<TimezoneSuggestionDto> suggestTimezones(
+            @RequestParam(required = false, defaultValue = "") @Size(max = 64) String q,
+            @RequestParam(defaultValue = "8") @Min(1) @Max(20) Integer limit
+    ) {
+        return timezoneSuggestionService.suggestTimezones(q, limit);
     }
 
     @PostMapping

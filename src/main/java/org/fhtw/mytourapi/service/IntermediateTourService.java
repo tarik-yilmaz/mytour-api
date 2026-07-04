@@ -12,6 +12,7 @@ import org.fhtw.mytourapi.dto.TourLogDto;
 import org.fhtw.mytourapi.dto.TourRouteDto;
 import org.fhtw.mytourapi.dto.TourSearchResponse;
 import org.fhtw.mytourapi.dto.TourSummaryDto;
+import org.fhtw.mytourapi.dto.TourSuggestionDto;
 import org.fhtw.mytourapi.dto.TransportType;
 import org.fhtw.mytourapi.dto.UpdateTourRequest;
 import org.fhtw.mytourapi.domain.TourEntity;
@@ -291,6 +292,25 @@ public class IntermediateTourService {
                 ratingMin
         );
         return new TourSearchResponse(tours, tours.size());
+    }
+
+    @Transactional(readOnly = true)
+    public List<TourSuggestionDto> suggestTours(String query, int limit) {
+        String trimmedQuery = query == null ? "" : query.trim();
+        if (trimmedQuery.length() < 2) {
+            return List.of();
+        }
+
+        if (persistentStore) {
+            return suggestPersistedTours(trimmedQuery, limit);
+        }
+
+        return toursById.values().stream()
+                .filter((tour) -> tourSearchIndex.matches(tour, trimmedQuery, null))
+                .sorted(Comparator.comparing(TourDetailDto::name, String.CASE_INSENSITIVE_ORDER))
+                .limit(limit)
+                .map(this::toSuggestion)
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -608,6 +628,21 @@ public class IntermediateTourService {
         return new TourSearchResponse(tours, tours.size());
     }
 
+    private List<TourSuggestionDto> suggestPersistedTours(String query, int limit) {
+        Optional<Long> userId = currentUserIdIfPresent();
+        if (userId.isEmpty()) {
+            return List.of();
+        }
+
+        return tourRepository.findAllByUser_IdOrderByUpdatedAtDesc(userId.get()).stream()
+                .filter((tour) -> persistedTourMatches(tour, query, null))
+                .map(persistenceMapper::toDetail)
+                .sorted(Comparator.comparing(TourDetailDto::name, String.CASE_INSENSITIVE_ORDER))
+                .limit(limit)
+                .map(this::toSuggestion)
+                .toList();
+    }
+
     private boolean persistedTourMatches(TourEntity tour, String query, Short ratingMin) {
         List<TourLogDto> logs = tour.getLogs().stream()
                 .map(persistenceMapper::toLog)
@@ -616,6 +651,16 @@ public class IntermediateTourService {
 
         tourSearchIndex.replaceLogs(tour.getId(), logs);
         return tourSearchIndex.matches(detail, query, ratingMin);
+    }
+
+    private TourSuggestionDto toSuggestion(TourDetailDto tour) {
+        String route = tour.startLocation() + " -> " + tour.endLocation();
+        return new TourSuggestionDto(
+                tour.id(),
+                tour.name(),
+                route,
+                route
+        );
     }
 
     private TourDetailDto createPersistedTour(CreateTourRequest request) {

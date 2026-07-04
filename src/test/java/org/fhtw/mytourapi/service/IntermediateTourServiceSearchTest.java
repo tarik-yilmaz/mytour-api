@@ -31,6 +31,28 @@ class IntermediateTourServiceSearchTest {
     }
 
     @Test
+    void searchMatchesWordPrefixesForAutocompleteTyping() {
+        SearchFixture fixture = searchFixture();
+
+        assertThat(tourIds(fixture.tourService().searchTours("dan", null, null, null, null)))
+                .containsExactly(1L);
+        assertThat(tourIds(fixture.tourService().searchTours("beg", null, null, null, null)))
+                .containsExactly(1L);
+        assertThat(tourIds(fixture.tourService().searchTours("sun chil", null, null, null, null)))
+                .containsExactly(2L);
+    }
+
+    @Test
+    void suggestToursReturnsSelectablePrefixMatches() {
+        SearchFixture fixture = searchFixture();
+
+        assertThat(fixture.tourService().suggestTours("rin", 5))
+                .extracting((suggestion) -> suggestion.tourId())
+                .containsExactly(3L);
+        assertThat(fixture.tourService().suggestTours("d", 5)).isEmpty();
+    }
+
+    @Test
     void searchMatchesComputedLabelsAndStructuredComputedFilters() {
         SearchFixture fixture = searchFixture();
 

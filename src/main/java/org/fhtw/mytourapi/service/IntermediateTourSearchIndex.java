@@ -64,7 +64,9 @@ public class IntermediateTourSearchIndex {
         documentTerms.addAll(searchTerms(tourSearchText(tour)));
         documentTerms.addAll(logDocument.terms());
 
-        return documentTerms.containsAll(queryTerms);
+        return queryTerms.stream()
+                .allMatch((queryTerm) -> documentTerms.stream()
+                        .anyMatch((documentTerm) -> documentTerm.startsWith(queryTerm)));
     }
 
     private static String tourSearchText(TourDetailDto tour) {

@@ -17,6 +17,7 @@ public class OpenRouteServiceProperties {
     private String hikeProfile = "foot-hiking";
     private String runningProfile = "foot-walking";
     private String vacationProfile = "driving-car";
+    private String geocodeBoundaryCountry = "AT";
 
     public boolean shouldUseApi() {
         return enabled && apiKey != null && !apiKey.isBlank();
@@ -101,5 +102,13 @@ public class OpenRouteServiceProperties {
 
     public void setVacationProfile(String vacationProfile) {
         this.vacationProfile = vacationProfile;
+    }
+
+    public String getGeocodeBoundaryCountry() {
+        return geocodeBoundaryCountry;
+    }
+
+    public void setGeocodeBoundaryCountry(String geocodeBoundaryCountry) {
+        this.geocodeBoundaryCountry = geocodeBoundaryCountry;
     }
 }

@@ -8,7 +8,9 @@ import org.fhtw.mytourapi.service.CoverImageStorageService;
 import org.fhtw.mytourapi.service.IntermediateTourLogService;
 import org.fhtw.mytourapi.service.IntermediateTourSearchIndex;
 import org.fhtw.mytourapi.service.IntermediateTourService;
+import org.fhtw.mytourapi.service.LocationSuggestionService;
 import org.fhtw.mytourapi.service.RouteCalculationService;
+import org.fhtw.mytourapi.service.TimezoneSuggestionService;
 import org.fhtw.mytourapi.service.TourAttributeCalculator;
 import org.fhtw.mytourapi.service.TourExportService;
 import org.fhtw.mytourapi.service.TourImportService;
@@ -22,6 +24,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.startsWith;
@@ -52,7 +55,9 @@ class TourControllerCoverImageTest {
                 .standaloneSetup(new TourController(
                         tourService,
                         new TourExportService(tourService, tourLogService),
-                        new TourImportService(tourService, tourLogService)
+                        new TourImportService(tourService, tourLogService),
+                        new LocationSuggestionService(new OpenRouteServiceProperties(), (query, limit) -> List.of()),
+                        new TimezoneSuggestionService()
                 ))
                 .setControllerAdvice(new ApiExceptionHandler(new ApiErrorResponseFactory()))
                 .build();
