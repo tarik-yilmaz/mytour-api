@@ -11,7 +11,6 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -65,7 +64,6 @@ public class TourLogWeatherEntity {
     @Column(name = "wind_speed_kmh", precision = 6, scale = 2)
     private BigDecimal windSpeedKmh;
 
-    @CreationTimestamp
-    @Column(name = "fetched_at", nullable = false, updatable = false)
+    @Column(name = "fetched_at", nullable = false)
     private Instant fetchedAt;
 }

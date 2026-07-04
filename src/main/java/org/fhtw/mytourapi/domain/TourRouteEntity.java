@@ -12,7 +12,6 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -63,7 +62,6 @@ public class TourRouteEntity {
     @Column(name = "route_geometry", nullable = false, columnDefinition = "jsonb")
     private JsonNode routeGeometry;
 
-    @CreationTimestamp
-    @Column(name = "route_fetched_at", nullable = false, updatable = false)
+    @Column(name = "route_fetched_at", nullable = false)
     private Instant routeFetchedAt;
 }

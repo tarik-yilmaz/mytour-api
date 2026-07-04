@@ -8,10 +8,17 @@ import org.fhtw.mytourapi.dto.TourDetailDto;
 import org.fhtw.mytourapi.dto.TourLogDto;
 import org.fhtw.mytourapi.dto.TourLogWeatherDto;
 import org.fhtw.mytourapi.dto.UpdateTourLogRequest;
+import org.fhtw.mytourapi.domain.TourEntity;
+import org.fhtw.mytourapi.domain.TourLogEntity;
+import org.fhtw.mytourapi.mapper.TourPersistenceMapper;
+import org.fhtw.mytourapi.repository.TourLogRepository;
+import org.fhtw.mytourapi.repository.TourRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -32,6 +39,10 @@ public class IntermediateTourLogService {
     private final IntermediateTourService tourService;
     private final IntermediateTourSearchIndex tourSearchIndex;
     private final WeatherSnapshotService weatherSnapshotService;
+    private final TourRepository tourRepository;
+    private final TourLogRepository tourLogRepository;
+    private final TourPersistenceMapper persistenceMapper;
+    private final boolean persistentStore;
     private final Map<Long, List<TourLogDto>> logsByTourId = new ConcurrentHashMap<>(Map.of(
             1L, List.of(
                     log(101L, 1L, "2026-05-10T17:45:00Z", "Calm evening ride, light wind, good route for beginners.", 2, "18400", 4380, 5,
@@ -58,20 +69,59 @@ public class IntermediateTourLogService {
     ));
     private final AtomicLong nextLogId = new AtomicLong(401L);
 
-    @Autowired
     public IntermediateTourLogService(
             IntermediateTourService tourService,
             IntermediateTourSearchIndex tourSearchIndex,
             WeatherSnapshotService weatherSnapshotService
     ) {
+        this(
+                tourService,
+                tourSearchIndex,
+                weatherSnapshotService,
+                (TourRepository) null,
+                (TourLogRepository) null,
+                (TourPersistenceMapper) null
+        );
+    }
+
+    @Autowired
+    public IntermediateTourLogService(
+            IntermediateTourService tourService,
+            IntermediateTourSearchIndex tourSearchIndex,
+            WeatherSnapshotService weatherSnapshotService,
+            ObjectProvider<TourRepository> tourRepositoryProvider,
+            ObjectProvider<TourLogRepository> tourLogRepositoryProvider,
+            TourPersistenceMapper persistenceMapper
+    ) {
+        this(
+                tourService,
+                tourSearchIndex,
+                weatherSnapshotService,
+                tourRepositoryProvider.getIfAvailable(),
+                tourLogRepositoryProvider.getIfAvailable(),
+                persistenceMapper
+        );
+    }
+
+    IntermediateTourLogService(
+            IntermediateTourService tourService,
+            IntermediateTourSearchIndex tourSearchIndex,
+            WeatherSnapshotService weatherSnapshotService,
+            TourRepository tourRepository,
+            TourLogRepository tourLogRepository,
+            TourPersistenceMapper persistenceMapper
+    ) {
         this.tourService = tourService;
         this.tourSearchIndex = tourSearchIndex;
         this.weatherSnapshotService = weatherSnapshotService;
-        logsByTourId.forEach((tourId, logs) -> {
-            tourService.initializeComputedAttributes(tourId, logs);
-            tourSearchIndex.replaceLogs(tourId, logs);
-        });
-        LOGGER.info("Initialized intermediate tour log store tourCount={}", logsByTourId.size());
+        this.tourRepository = tourRepository;
+        this.tourLogRepository = tourLogRepository;
+        this.persistenceMapper = persistenceMapper;
+        this.persistentStore = tourService.usesPersistentStore()
+                && tourRepository != null
+                && tourLogRepository != null
+                && persistenceMapper != null;
+        initializeInMemoryStoreIfNeeded();
     }
 
     public IntermediateTourLogService(
@@ -81,7 +131,12 @@ public class IntermediateTourLogService {
         this(tourService, tourSearchIndex, WeatherSnapshotService.localFallback());
     }
 
+    @Transactional(readOnly = true)
     public Optional<List<TourLogDto>> listLogs(Long tourId) {
+        if (persistentStore) {
+            return listPersistedLogs(tourId);
+        }
+
         if (tourService.getTour(tourId).isEmpty()) {
             return Optional.empty();
         }
@@ -93,13 +148,23 @@ public class IntermediateTourLogService {
         return Optional.of(logs);
     }
 
+    @Transactional(readOnly = true)
     public List<TourLogDto> listLogsForExport(Long tourId) {
+        if (persistentStore) {
+            return listPersistedLogsForExport(tourId);
+        }
+
         return logsByTourId.getOrDefault(tourId, List.of()).stream()
                 .sorted(Comparator.comparing(TourLogDto::performedAt).thenComparing(TourLogDto::id))
                 .toList();
     }
 
+    @Transactional
     public Optional<TourLogDto> createLog(Long tourId, CreateTourLogRequest request) {
+        if (persistentStore) {
+            return createPersistedLog(tourId, request);
+        }
+
         Optional<TourDetailDto> tour = tourService.getTour(tourId);
         if (tour.isEmpty()) {
             return Optional.empty();
@@ -138,7 +203,12 @@ public class IntermediateTourLogService {
         return Optional.of(log);
     }
 
+    @Transactional
     public Optional<List<TourLogDto>> importLogs(Long tourId, List<ImportedTourLogDto> importedLogs) {
+        if (persistentStore) {
+            return importPersistedLogs(tourId, importedLogs);
+        }
+
         if (tourService.getTour(tourId).isEmpty()) {
             return Optional.empty();
         }
@@ -159,7 +229,13 @@ public class IntermediateTourLogService {
         return Optional.of(logs);
     }
 
+    @Transactional(readOnly = true)
     public Optional<TourLogDto> getLog(Long tourId, Long logId) {
+        if (persistentStore) {
+            return findPersistedLog(tourId, logId)
+                    .map(persistenceMapper::toLog);
+        }
+
         if (tourService.getTour(tourId).isEmpty()) {
             return Optional.empty();
         }
@@ -167,7 +243,12 @@ public class IntermediateTourLogService {
         return findLog(tourId, logId);
     }
 
+    @Transactional
     public Optional<TourLogDto> updateLog(Long tourId, Long logId, UpdateTourLogRequest request) {
+        if (persistentStore) {
+            return updatePersistedLog(tourId, logId, request);
+        }
+
         Optional<TourDetailDto> tour = tourService.getTour(tourId);
         if (tour.isEmpty()) {
             return Optional.empty();
@@ -200,7 +281,12 @@ public class IntermediateTourLogService {
         return Optional.of(updatedLog);
     }
 
+    @Transactional
     public boolean deleteLog(Long tourId, Long logId) {
+        if (persistentStore) {
+            return deletePersistedLog(tourId, logId);
+        }
+
         if (tourService.getTour(tourId).isEmpty()) {
             return false;
         }
@@ -220,7 +306,12 @@ public class IntermediateTourLogService {
         return true;
     }
 
+    @Transactional
     public Optional<TourLogWeatherDto> refreshWeather(Long tourId, Long logId) {
+        if (persistentStore) {
+            return refreshPersistedWeather(tourId, logId);
+        }
+
         Optional<TourDetailDto> tour = tourService.getTour(tourId);
         if (tour.isEmpty()) {
             return Optional.empty();
@@ -252,6 +343,208 @@ public class IntermediateTourLogService {
         refreshTourSearchIndex(tourId);
         LOGGER.info("Refreshed intermediate tour log weather tourId={} logId={} provider={}", tourId, logId, weather.provider());
         return Optional.of(weather);
+    }
+
+    private void initializeInMemoryStoreIfNeeded() {
+        if (persistentStore) {
+            LOGGER.info("Initialized persisted tour log store");
+            return;
+        }
+
+        logsByTourId.forEach((tourId, logs) -> {
+            tourService.initializeComputedAttributes(tourId, logs);
+            tourSearchIndex.replaceLogs(tourId, logs);
+        });
+        LOGGER.info("Initialized intermediate tour log store tourCount={}", logsByTourId.size());
+    }
+
+    private Optional<List<TourLogDto>> listPersistedLogs(Long tourId) {
+        Optional<Long> userId = tourService.currentUserIdIfPresent();
+        if (userId.isEmpty() || !tourRepository.existsByIdAndUser_Id(tourId, userId.get())) {
+            return Optional.empty();
+        }
+
+        List<TourLogDto> logs = tourLogRepository
+                .findAllByTour_IdAndTour_User_IdOrderByPerformedAtDesc(tourId, userId.get())
+                .stream()
+                .map(persistenceMapper::toLog)
+                .toList();
+
+        return Optional.of(logs);
+    }
+
+    private List<TourLogDto> listPersistedLogsForExport(Long tourId) {
+        return tourService.currentUserIdIfPresent()
+                .map((userId) -> tourLogRepository
+                        .findAllByTour_IdAndTour_User_IdOrderByPerformedAtDesc(tourId, userId).stream()
+                        .map(persistenceMapper::toLog)
+                        .sorted(Comparator.comparing(TourLogDto::performedAt).thenComparing(TourLogDto::id))
+                        .toList())
+                .orElseGet(List::of);
+    }
+
+    private Optional<TourLogDto> createPersistedLog(Long tourId, CreateTourLogRequest request) {
+        Optional<TourEntity> tour = findOwnedTour(tourId);
+        if (tour.isEmpty()) {
+            return Optional.empty();
+        }
+
+        Instant now = Instant.now();
+        TourLogEntity log = new TourLogEntity();
+        log.setTour(tour.get());
+        applyLogFields(log, request.performedAt(), request.comment(), request.difficulty(), request.totalDistanceM(),
+                request.totalTimeS(), request.rating());
+
+        TourLogEntity savedLog = tourLogRepository.saveAndFlush(log);
+        TourLogWeatherDto weather = weatherSnapshotService.snapshotFor(
+                savedLog.getId(),
+                persistenceMapper.toDetail(tour.get()),
+                request.performedAt(),
+                now
+        );
+        persistenceMapper.applyWeather(savedLog, weather);
+        savedLog = tourLogRepository.saveAndFlush(savedLog);
+
+        refreshPersistedDerivedTourState(tourId);
+        LOGGER.info(
+                "Created persisted tour log tourId={} logId={} weatherProvider={}",
+                tourId,
+                savedLog.getId(),
+                weather.provider()
+        );
+        return Optional.of(persistenceMapper.toLog(savedLog));
+    }
+
+    private Optional<List<TourLogDto>> importPersistedLogs(Long tourId, List<ImportedTourLogDto> importedLogs) {
+        Optional<TourEntity> tour = findOwnedTour(tourId);
+        if (tour.isEmpty()) {
+            return Optional.empty();
+        }
+
+        List<TourLogDto> logs = importedLogs.stream()
+                .map((importedLog) -> {
+                    CreateTourLogRequest request = importedLog.log();
+                    TourLogEntity log = new TourLogEntity();
+                    log.setTour(tour.get());
+                    applyLogFields(log, request.performedAt(), request.comment(), request.difficulty(),
+                            request.totalDistanceM(), request.totalTimeS(), request.rating());
+
+                    TourLogEntity savedLog = tourLogRepository.saveAndFlush(log);
+                    persistenceMapper.applyImportedWeather(savedLog, importedLog.weather());
+                    savedLog = tourLogRepository.saveAndFlush(savedLog);
+                    return persistenceMapper.toLog(savedLog);
+                })
+                .toList();
+
+        refreshPersistedDerivedTourState(tourId);
+        LOGGER.info("Imported persisted tour logs tourId={} count={}", tourId, logs.size());
+        return Optional.of(logs);
+    }
+
+    private Optional<TourLogEntity> findPersistedLog(Long tourId, Long logId) {
+        return tourService.currentUserIdIfPresent()
+                .flatMap((userId) -> tourLogRepository.findByIdAndTour_IdAndTour_User_Id(logId, tourId, userId));
+    }
+
+    private Optional<TourLogDto> updatePersistedLog(Long tourId, Long logId, UpdateTourLogRequest request) {
+        return findPersistedLog(tourId, logId)
+                .map((log) -> {
+                    Instant now = Instant.now();
+                    applyLogFields(log, request.performedAt(), request.comment(), request.difficulty(),
+                            request.totalDistanceM(), request.totalTimeS(), request.rating());
+
+                    TourLogWeatherDto weather = weatherSnapshotService.snapshotFor(
+                            logId,
+                            persistenceMapper.toDetail(log.getTour()),
+                            request.performedAt(),
+                            now
+                    );
+                    persistenceMapper.applyWeather(log, weather);
+                    TourLogEntity savedLog = tourLogRepository.saveAndFlush(log);
+                    refreshPersistedDerivedTourState(tourId);
+
+                    LOGGER.info("Updated persisted tour log tourId={} logId={} version={}",
+                            tourId, logId, savedLog.getVersion());
+                    return persistenceMapper.toLog(savedLog);
+                });
+    }
+
+    private boolean deletePersistedLog(Long tourId, Long logId) {
+        Optional<TourLogEntity> log = findPersistedLog(tourId, logId);
+        if (log.isEmpty()) {
+            return false;
+        }
+
+        tourLogRepository.delete(log.get());
+        tourLogRepository.flush();
+        refreshPersistedDerivedTourState(tourId);
+        LOGGER.info("Deleted persisted tour log tourId={} logId={}", tourId, logId);
+        return true;
+    }
+
+    private Optional<TourLogWeatherDto> refreshPersistedWeather(Long tourId, Long logId) {
+        return findPersistedLog(tourId, logId)
+                .map((log) -> {
+                    Instant now = Instant.now();
+                    TourLogWeatherDto weather = weatherSnapshotService.snapshotFor(
+                            logId,
+                            persistenceMapper.toDetail(log.getTour()),
+                            log.getPerformedAt(),
+                            now
+                    );
+                    persistenceMapper.applyWeather(log, weather);
+                    tourLogRepository.saveAndFlush(log);
+                    refreshPersistedTourSearchIndex(tourId);
+
+                    LOGGER.info(
+                            "Refreshed persisted tour log weather tourId={} logId={} provider={}",
+                            tourId,
+                            logId,
+                            weather.provider()
+                    );
+                    return weather;
+                });
+    }
+
+    private Optional<TourEntity> findOwnedTour(Long tourId) {
+        return tourService.currentUserIdIfPresent()
+                .flatMap((userId) -> tourRepository.findByIdAndUser_Id(tourId, userId));
+    }
+
+    private void applyLogFields(
+            TourLogEntity log,
+            Instant performedAt,
+            String comment,
+            Short difficulty,
+            BigDecimal totalDistanceM,
+            Integer totalTimeS,
+            Short rating
+    ) {
+        log.setPerformedAt(performedAt);
+        log.setComment(normalizeComment(comment));
+        log.setDifficulty(difficulty);
+        log.setTotalDistanceM(totalDistanceM);
+        log.setTotalTimeS(totalTimeS);
+        log.setRating(rating);
+    }
+
+    private void refreshPersistedDerivedTourState(Long tourId) {
+        List<TourLogDto> logs = persistedLogsForTour(tourId);
+        tourService.refreshComputedAttributes(tourId, logs);
+        tourSearchIndex.replaceLogs(tourId, logs);
+    }
+
+    private void refreshPersistedTourSearchIndex(Long tourId) {
+        tourSearchIndex.replaceLogs(tourId, persistedLogsForTour(tourId));
+    }
+
+    private List<TourLogDto> persistedLogsForTour(Long tourId) {
+        return tourService.currentUserIdIfPresent()
+                .map((userId) -> tourLogRepository
+                        .findAllByTour_IdAndTour_User_IdOrderByPerformedAtDesc(tourId, userId).stream()
+                        .map(persistenceMapper::toLog)
+                        .toList())
+                .orElseGet(List::of);
     }
 
     private TourLogDto toImportedLog(Long tourId, ImportedTourLogDto importedLog, Instant importedAt) {
