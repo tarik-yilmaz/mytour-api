@@ -58,6 +58,16 @@ class IntermediateTourServiceSearchTest {
     }
 
     @Test
+    void searchTreatsSqlInjectionLikeInputAsPlainText() {
+        SearchFixture fixture = searchFixture();
+
+        assertThat(tourIds(fixture.tourService().searchTours("anything' OR '1'='1", null, null, null, null)))
+                .isEmpty();
+        assertThat(tourIds(fixture.tourService().searchTours("Danube' OR '1'='1", null, null, null, null)))
+                .isEmpty();
+    }
+
+    @Test
     void searchIndexTracksCreatedAndDeletedLogs() {
         SearchFixture fixture = searchFixture();
 
