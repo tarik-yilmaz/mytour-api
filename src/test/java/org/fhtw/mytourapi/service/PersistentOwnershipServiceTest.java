@@ -14,8 +14,13 @@ import org.fhtw.mytourapi.mapper.TourPersistenceMapper;
 import org.fhtw.mytourapi.repository.TourLogRepository;
 import org.fhtw.mytourapi.repository.TourRepository;
 import org.fhtw.mytourapi.repository.UserRepository;
+import org.fhtw.mytourapi.security.AuthenticatedUserPrincipal;
+import org.fhtw.mytourapi.security.CurrentUserService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -34,10 +39,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class PersistentOwnershipServiceTest {
 
-    private static final String INTERMEDIATE_USERNAME = "intermediate-user";
-
     @TempDir
     private Path tempDirectory;
+
+    @AfterEach
+    void clearSecurityContext() {
+        SecurityContextHolder.clearContext();
+    }
 
     @Test
     void getTourUsesCurrentUserOwnershipScope() {
@@ -47,7 +55,7 @@ class PersistentOwnershipServiceTest {
         RepositoryStub<UserRepository> userRepository = RepositoryStub.create(UserRepository.class);
         IntermediateTourService tourService = persistentTourService(tourRepository.proxy(), userRepository.proxy());
 
-        userRepository.respond("findByUsernameNormalized", Optional.of(user), INTERMEDIATE_USERNAME);
+        authenticate(user);
         tourRepository.respond("findByIdAndUser_Id", Optional.of(tour), 7L, 42L);
 
         Optional<TourDetailDto> result = tourService.getTour(7L);
@@ -72,7 +80,7 @@ class PersistentOwnershipServiceTest {
                 tourLogRepository.proxy()
         );
 
-        userRepository.respond("findByUsernameNormalized", Optional.of(user), INTERMEDIATE_USERNAME);
+        authenticate(user);
         tourRepository.respond("existsByIdAndUser_Id", true, 7L, 42L);
         tourLogRepository.respond(
                 "findAllByTour_IdAndTour_User_IdOrderByPerformedAtDesc",
@@ -106,7 +114,7 @@ class PersistentOwnershipServiceTest {
                 tourLogRepository.proxy()
         );
 
-        userRepository.respond("findByUsernameNormalized", Optional.of(user), INTERMEDIATE_USERNAME);
+        authenticate(user);
         tourLogRepository.respond("findByIdAndTour_IdAndTour_User_Id", Optional.empty(), 11L, 7L, 42L);
 
         assertThat(logService.deleteLog(7L, 11L)).isFalse();
@@ -126,7 +134,8 @@ class PersistentOwnershipServiceTest {
                 new IntermediateTourSearchIndex(),
                 tourRepository,
                 userRepository,
-                new TourPersistenceMapper()
+                new TourPersistenceMapper(),
+                new CurrentUserService(userRepository)
         );
     }
 
@@ -160,12 +169,20 @@ class PersistentOwnershipServiceTest {
         return new CoverImageStorageService(properties);
     }
 
+    private static void authenticate(UserEntity user) {
+        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(
+                new AuthenticatedUserPrincipal(user.getId(), user.getUsername()),
+                null,
+                List.of()
+        ));
+    }
+
     private static UserEntity user(Long id) {
         UserEntity user = new UserEntity();
         user.setId(id);
-        user.setUsername("Intermediate User");
-        user.setUsernameNormalized(INTERMEDIATE_USERNAME);
-        user.setPasswordHash("{noop}intermediate");
+        user.setUsername("Alice");
+        user.setUsernameNormalized("alice");
+        user.setPasswordHash("{noop}password");
         return user;
     }
 

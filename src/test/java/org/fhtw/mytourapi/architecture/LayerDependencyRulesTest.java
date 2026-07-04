@@ -40,7 +40,7 @@ class LayerDependencyRulesTest {
             "mapper", Set.of("domain", "dto", "mapper"),
             "repository", Set.of("domain", "repository"),
             "security", Set.of("domain", "dto", "exception", "repository", "security"),
-            "service", Set.of("client", "config", "domain", "dto", "exception", "mapper", "repository", "service")
+            "service", Set.of("client", "config", "domain", "dto", "exception", "mapper", "repository", "security", "service")
     );
 
     @Test

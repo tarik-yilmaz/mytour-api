@@ -20,6 +20,7 @@ import org.fhtw.mytourapi.exception.FileStorageException;
 import org.fhtw.mytourapi.mapper.TourPersistenceMapper;
 import org.fhtw.mytourapi.repository.TourRepository;
 import org.fhtw.mytourapi.repository.UserRepository;
+import org.fhtw.mytourapi.security.CurrentUserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -42,8 +43,6 @@ public class IntermediateTourService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(IntermediateTourService.class);
     private static final Long INTERMEDIATE_USER_ID = 1L;
-    private static final String INTERMEDIATE_USERNAME = "intermediate-user";
-    private static final String INTERMEDIATE_PASSWORD_HASH = "{noop}intermediate";
 
     private final Map<Long, TourDetailDto> toursById = new ConcurrentHashMap<>(Map.of(
             1L, new TourDetailDto(
@@ -192,6 +191,7 @@ public class IntermediateTourService {
     private final TourRepository tourRepository;
     private final UserRepository userRepository;
     private final TourPersistenceMapper persistenceMapper;
+    private final CurrentUserService currentUserService;
     private final boolean persistentStore;
 
     public IntermediateTourService(
@@ -207,7 +207,8 @@ public class IntermediateTourService {
                 tourSearchIndex,
                 (TourRepository) null,
                 (UserRepository) null,
-                (TourPersistenceMapper) null
+                (TourPersistenceMapper) null,
+                (CurrentUserService) null
         );
     }
 
@@ -219,7 +220,8 @@ public class IntermediateTourService {
             IntermediateTourSearchIndex tourSearchIndex,
             ObjectProvider<TourRepository> tourRepositoryProvider,
             ObjectProvider<UserRepository> userRepositoryProvider,
-            TourPersistenceMapper persistenceMapper
+            TourPersistenceMapper persistenceMapper,
+            ObjectProvider<CurrentUserService> currentUserServiceProvider
     ) {
         this(
                 routeCalculationService,
@@ -228,7 +230,8 @@ public class IntermediateTourService {
                 tourSearchIndex,
                 tourRepositoryProvider.getIfAvailable(),
                 userRepositoryProvider.getIfAvailable(),
-                persistenceMapper
+                persistenceMapper,
+                currentUserServiceProvider.getIfAvailable()
         );
     }
 
@@ -239,7 +242,8 @@ public class IntermediateTourService {
             IntermediateTourSearchIndex tourSearchIndex,
             TourRepository tourRepository,
             UserRepository userRepository,
-            TourPersistenceMapper persistenceMapper
+            TourPersistenceMapper persistenceMapper,
+            CurrentUserService currentUserService
     ) {
         this.routeCalculationService = routeCalculationService;
         this.coverImageStorageService = coverImageStorageService;
@@ -248,7 +252,11 @@ public class IntermediateTourService {
         this.tourRepository = tourRepository;
         this.userRepository = userRepository;
         this.persistenceMapper = persistenceMapper;
-        this.persistentStore = tourRepository != null && userRepository != null && persistenceMapper != null;
+        this.currentUserService = currentUserService;
+        this.persistentStore = tourRepository != null
+                && userRepository != null
+                && persistenceMapper != null
+                && currentUserService != null;
     }
 
     @Transactional(readOnly = true)
@@ -555,8 +563,7 @@ public class IntermediateTourService {
             return Optional.of(INTERMEDIATE_USER_ID);
         }
 
-        return userRepository.findByUsernameNormalized(INTERMEDIATE_USERNAME)
-                .map(UserEntity::getId);
+        return currentUserService.currentUserIdIfAuthenticated();
     }
 
     Long createOrGetCurrentUserId() {
@@ -564,7 +571,7 @@ public class IntermediateTourService {
             return INTERMEDIATE_USER_ID;
         }
 
-        return currentUser().getId();
+        return currentUserService.currentUserId();
     }
 
     private TourSearchResponse searchPersistedTours(
@@ -824,14 +831,7 @@ public class IntermediateTourService {
     }
 
     private UserEntity currentUser() {
-        return userRepository.findByUsernameNormalized(INTERMEDIATE_USERNAME)
-                .orElseGet(() -> {
-                    UserEntity user = new UserEntity();
-                    user.setUsername(INTERMEDIATE_USERNAME);
-                    user.setUsernameNormalized(INTERMEDIATE_USERNAME);
-                    user.setPasswordHash(INTERMEDIATE_PASSWORD_HASH);
-                    return userRepository.saveAndFlush(user);
-                });
+        return currentUserService.currentUser();
     }
 
     private TourSummaryDto toSummary(TourDetailDto tour) {
