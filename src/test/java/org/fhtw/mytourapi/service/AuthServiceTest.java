@@ -6,6 +6,7 @@ import org.fhtw.mytourapi.dto.AuthResponse;
 import org.fhtw.mytourapi.dto.LoginRequest;
 import org.fhtw.mytourapi.dto.RegisterRequest;
 import org.fhtw.mytourapi.dto.UserDto;
+import org.fhtw.mytourapi.exception.UnauthorizedException;
 import org.fhtw.mytourapi.repository.UserRepository;
 import org.fhtw.mytourapi.security.AuthenticatedUserPrincipal;
 import org.fhtw.mytourapi.security.CurrentUserService;
@@ -14,12 +15,10 @@ import org.fhtw.mytourapi.security.JwtProperties;
 import org.fhtw.mytourapi.security.JwtService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -69,8 +68,8 @@ class AuthServiceTest {
         authService.register(new RegisterRequest("alice", "very-secret"));
 
         assertThatThrownBy(() -> authService.login(new LoginRequest("ALICE", "wrong-secret")))
-                .isInstanceOfSatisfying(ResponseStatusException.class, (exception) ->
-                        assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED));
+                .isInstanceOf(UnauthorizedException.class)
+                .hasMessageContaining("Invalid username or password");
     }
 
     @Test

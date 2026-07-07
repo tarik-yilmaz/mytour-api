@@ -4,6 +4,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import org.fhtw.mytourapi.dto.ApiErrorResponse;
+import org.fhtw.mytourapi.exception.ConflictException;
+import org.fhtw.mytourapi.exception.UnauthorizedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -34,6 +36,34 @@ public class ApiExceptionHandler {
 
     public ApiExceptionHandler(ApiErrorResponseFactory errorResponseFactory) {
         this.errorResponseFactory = errorResponseFactory;
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ApiErrorResponse> handleConflict(
+            ConflictException exception,
+            HttpServletRequest request
+    ) {
+        LOGGER.debug("Conflict exception at {}", request.getRequestURI());
+        return errorResponseFactory.create(
+                HttpStatus.CONFLICT,
+                exception.getMessage(),
+                request,
+                List.of()
+        );
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ApiErrorResponse> handleUnauthorized(
+            UnauthorizedException exception,
+            HttpServletRequest request
+    ) {
+        LOGGER.debug("Unauthorized exception at {}", request.getRequestURI());
+        return errorResponseFactory.create(
+                HttpStatus.UNAUTHORIZED,
+                exception.getMessage(),
+                request,
+                List.of()
+        );
     }
 
     @ExceptionHandler(ResponseStatusException.class)

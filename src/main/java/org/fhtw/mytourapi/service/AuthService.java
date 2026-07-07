@@ -5,17 +5,17 @@ import org.fhtw.mytourapi.dto.AuthResponse;
 import org.fhtw.mytourapi.dto.LoginRequest;
 import org.fhtw.mytourapi.dto.RegisterRequest;
 import org.fhtw.mytourapi.dto.UserDto;
+import org.fhtw.mytourapi.exception.ConflictException;
+import org.fhtw.mytourapi.exception.UnauthorizedException;
 import org.fhtw.mytourapi.repository.UserRepository;
 import org.fhtw.mytourapi.security.CurrentUserService;
 import org.fhtw.mytourapi.security.JwtService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class AuthService {
@@ -45,7 +45,7 @@ public class AuthService {
         String username = request.username().trim();
         String normalizedUsername = normalizeUsername(username);
         if (userRepository.existsByUsernameNormalized(normalizedUsername)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Username is already taken");
+            throw new ConflictException("Username is already taken");
         }
 
         UserEntity user = new UserEntity();
@@ -58,7 +58,7 @@ public class AuthService {
             LOGGER.info("Registered user userId={} usernameNormalized={}", savedUser.getId(), savedUser.getUsernameNormalized());
             return authResponse(savedUser);
         } catch (DataIntegrityViolationException exception) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Username is already taken", exception);
+            throw new ConflictException("Username is already taken", exception);
         }
     }
 
@@ -90,8 +90,8 @@ public class AuthService {
         );
     }
 
-    private static ResponseStatusException invalidCredentials() {
-        return new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password");
+    private static UnauthorizedException invalidCredentials() {
+        return new UnauthorizedException("Invalid username or password");
     }
 
     private static String normalizeUsername(String username) {
