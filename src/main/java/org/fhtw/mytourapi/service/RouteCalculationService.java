@@ -22,7 +22,7 @@ import java.time.Instant;
 public class RouteCalculationService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RouteCalculationService.class);
-    private static final String FALLBACK_ROUTE_SOURCE = "INTERMEDIATE";
+    private static final String FALLBACK_ROUTE_SOURCE = "LOCAL";
 
     private final OpenRouteServiceProperties properties;
     private final RouteDirectionsClient directionsClient;

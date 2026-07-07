@@ -40,7 +40,7 @@ class RouteCalculationServiceTest {
         assertThat(clientCalled).isFalse();
         assertThat(result.distanceM()).isPositive();
         assertThat(result.durationS()).isPositive();
-        assertThat(result.route().routeSource()).isEqualTo("INTERMEDIATE");
+        assertThat(result.route().routeSource()).isEqualTo("LOCAL");
         assertThat(result.route().routeProfile()).isEqualTo("cycling-regular");
         assertThat(result.route().routeGeometry().path("type").asText()).isEqualTo("FeatureCollection");
         assertThat(output).contains(
