@@ -45,6 +45,7 @@ public class CoverImageStorageService {
                 Files.copy(inputStream, target, StandardCopyOption.REPLACE_EXISTING);
             }
         } catch (IOException exception) {
+            LOGGER.error("Could not store cover image file target={}", target, exception);
             throw FileStorageException.internal("Could not store cover image file.", exception);
         }
 
@@ -74,6 +75,7 @@ public class CoverImageStorageService {
             boolean deleted = Files.deleteIfExists(target);
             LOGGER.info("Deleted cover image file deleted={}", deleted);
         } catch (IOException exception) {
+            LOGGER.error("Could not delete cover image file target={}", target, exception);
             throw FileStorageException.internal("Could not delete cover image file.", exception);
         }
     }

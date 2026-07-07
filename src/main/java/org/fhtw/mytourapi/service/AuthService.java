@@ -45,6 +45,7 @@ public class AuthService {
         String username = request.username().trim();
         String normalizedUsername = normalizeUsername(username);
         if (userRepository.existsByUsernameNormalized(normalizedUsername)) {
+            LOGGER.warn("Registration rejected, username already taken usernameNormalized={}", normalizedUsername);
             throw new ConflictException("Username is already taken");
         }
 
@@ -58,6 +59,7 @@ public class AuthService {
             LOGGER.info("Registered user userId={} usernameNormalized={}", savedUser.getId(), savedUser.getUsernameNormalized());
             return authResponse(savedUser);
         } catch (DataIntegrityViolationException exception) {
+            LOGGER.warn("Registration rejected, data integrity violation usernameNormalized={}", normalizedUsername, exception);
             throw new ConflictException("Username is already taken", exception);
         }
     }
@@ -66,8 +68,12 @@ public class AuthService {
     public AuthResponse login(LoginRequest request) {
         String normalizedUsername = normalizeUsername(request.username());
         UserEntity user = userRepository.findByUsernameNormalized(normalizedUsername)
-                .orElseThrow(AuthService::invalidCredentials);
+                .orElseThrow(() -> {
+            LOGGER.warn("Login failed, unknown user usernameNormalized={}", normalizedUsername);
+            return invalidCredentials();
+        });
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
+            LOGGER.warn("Login failed, wrong password userId={}", user.getId());
             throw invalidCredentials();
         }
 

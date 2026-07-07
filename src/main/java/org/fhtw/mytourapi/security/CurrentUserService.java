@@ -4,6 +4,8 @@ import org.fhtw.mytourapi.domain.UserEntity;
 import org.fhtw.mytourapi.dto.UserDto;
 import org.fhtw.mytourapi.exception.UnauthorizedException;
 import org.fhtw.mytourapi.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -12,6 +14,8 @@ import java.util.Optional;
 
 @Service
 public class CurrentUserService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(CurrentUserService.class);
 
     private final UserRepository userRepository;
 
@@ -25,13 +29,19 @@ public class CurrentUserService {
 
     public Long currentUserId() {
         return currentUserIdIfAuthenticated()
-                .orElseThrow(() -> new UnauthorizedException("Authentication required"));
+                .orElseThrow(() -> {
+                    LOGGER.warn("Authentication required but no authenticated user found");
+                    return new UnauthorizedException("Authentication required");
+                });
     }
 
     public UserEntity currentUser() {
         Long userId = currentUserId();
         return userRepository.findById(userId)
-                .orElseThrow(() -> new UnauthorizedException("Authentication required"));
+                .orElseThrow(() -> {
+                    LOGGER.warn("Authenticated user not found in database userId={}", userId);
+                    return new UnauthorizedException("Authentication required");
+                });
     }
 
     public UserDto currentUserDto() {
