@@ -6,6 +6,7 @@ import org.fhtw.mytourapi.dto.AuthResponse;
 import org.fhtw.mytourapi.dto.LoginRequest;
 import org.fhtw.mytourapi.dto.RegisterRequest;
 import org.fhtw.mytourapi.dto.UserDto;
+import org.fhtw.mytourapi.exception.ConflictException;
 import org.fhtw.mytourapi.exception.UnauthorizedException;
 import org.fhtw.mytourapi.repository.UserRepository;
 import org.fhtw.mytourapi.security.AuthenticatedUserPrincipal;
@@ -59,6 +60,17 @@ class AuthServiceTest {
         assertThat(claims.username()).isEqualTo("Alice_1");
         assertThat(savedUser.getPasswordHash()).isNotEqualTo("very-secret");
         assertThat(passwordEncoder.matches("very-secret", savedUser.getPasswordHash())).isTrue();
+    }
+
+    @Test
+    void registerRejectsDuplicateUsername() {
+        UserRepositoryStub repository = new UserRepositoryStub();
+        AuthService authService = authService(repository.proxy(), jwtService());
+        authService.register(new RegisterRequest("alice", "very-secret"));
+
+        assertThatThrownBy(() -> authService.register(new RegisterRequest("Alice", "another-secret")))
+                .isInstanceOf(ConflictException.class)
+                .hasMessageContaining("Username is already taken");
     }
 
     @Test
