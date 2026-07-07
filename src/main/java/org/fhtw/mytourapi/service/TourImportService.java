@@ -198,6 +198,10 @@ public class TourImportService {
 
     private static boolean unsafeRelativePath(String value) {
         try {
+            if (value.indexOf('\\') >= 0 || value.matches("^[A-Za-z]:.*")) {
+                return true;
+            }
+
             Path path = Path.of(value);
             Path normalizedPath = path.normalize();
             return path.isAbsolute()

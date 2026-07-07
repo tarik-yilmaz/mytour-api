@@ -25,6 +25,7 @@ import org.fhtw.mytourapi.exception.ApiErrorResponseFactory;
 import org.fhtw.mytourapi.exception.ConflictException;
 import org.fhtw.mytourapi.exception.UpstreamServiceException;
 import org.fhtw.mytourapi.service.LocationSuggestionService;
+import org.fhtw.mytourapi.service.StoredCoverImage;
 import org.fhtw.mytourapi.service.TimezoneSuggestionService;
 import org.fhtw.mytourapi.service.TourExportService;
 import org.fhtw.mytourapi.service.TourImportService;
@@ -34,8 +35,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.converter.ResourceHttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
@@ -56,6 +60,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -95,7 +100,10 @@ class TourControllerTest {
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new ApiExceptionHandler(new ApiErrorResponseFactory()))
                 .setValidator(validator)
-                .setMessageConverters(new MappingJackson2HttpMessageConverter(jsonMapper))
+                .setMessageConverters(
+                        new ResourceHttpMessageConverter(),
+                        new MappingJackson2HttpMessageConverter(jsonMapper)
+                )
                 .build();
     }
 
@@ -264,6 +272,34 @@ class TourControllerTest {
                             request.setMethod("PUT");
                             return request;
                         }))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getCoverImageReturnsImageContentWhenFound() throws Exception {
+        byte[] content = new byte[]{1, 2, 3};
+        when(tourService.getCoverImage(1L)).thenReturn(Optional.of(new StoredCoverImage(
+                new ByteArrayResource(content),
+                "cover.jpg",
+                MediaType.IMAGE_JPEG,
+                content.length
+        )));
+
+        mockMvc.perform(get("/api/tours/1/cover-image"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.IMAGE_JPEG))
+                .andExpect(header().string(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "inline; filename=\"cover.jpg\"; filename*=UTF-8''cover.jpg"
+                ))
+                .andExpect(content().bytes(content));
+    }
+
+    @Test
+    void getCoverImageReturns404WhenNotFound() throws Exception {
+        when(tourService.getCoverImage(99L)).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/api/tours/99/cover-image"))
                 .andExpect(status().isNotFound());
     }
 

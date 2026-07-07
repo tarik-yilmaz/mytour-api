@@ -305,6 +305,13 @@ public class TourService {
                 });
     }
 
+    @Transactional(readOnly = true)
+    public Optional<StoredCoverImage> getCoverImage(Long tourId) {
+        return currentUserIdIfPresent()
+                .flatMap((userId) -> tourRepository.findByIdAndUser_Id(tourId, userId))
+                .flatMap((tour) -> coverImageStorageService.load(persistenceMapper.toCoverImage(tour)));
+    }
+
     @Transactional
     public boolean deleteCoverImage(Long tourId) {
         Optional<TourEntity> tour = currentUserIdIfPresent()

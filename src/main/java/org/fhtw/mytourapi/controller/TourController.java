@@ -26,8 +26,14 @@ import org.fhtw.mytourapi.service.LocationSuggestionService;
 import org.fhtw.mytourapi.service.TimezoneSuggestionService;
 import org.fhtw.mytourapi.service.TourExportService;
 import org.fhtw.mytourapi.service.TourImportService;
+import org.fhtw.mytourapi.service.StoredCoverImage;
+import org.springframework.core.io.Resource;
+import org.springframework.http.CacheControl;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -43,6 +49,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Validated
@@ -158,6 +165,23 @@ public class TourController {
     ) {
         return tourService.uploadCoverImage(tourId, file)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tour not found"));
+    }
+
+    @GetMapping("/{tourId}/cover-image")
+    @Operation(summary = "Download the one cover image for a tour.")
+    public ResponseEntity<Resource> getCoverImage(@PathVariable Long tourId) {
+        StoredCoverImage coverImage = tourService.getCoverImage(tourId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cover image not found"));
+
+        ContentDisposition contentDisposition = ContentDisposition.inline()
+                .filename(coverImage.originalFilename(), StandardCharsets.UTF_8)
+                .build();
+        return ResponseEntity.ok()
+                .contentType(coverImage.contentType())
+                .contentLength(coverImage.sizeBytes())
+                .cacheControl(CacheControl.noCache())
+                .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition.toString())
+                .body(coverImage.resource());
     }
 
     @DeleteMapping("/{tourId}/cover-image")

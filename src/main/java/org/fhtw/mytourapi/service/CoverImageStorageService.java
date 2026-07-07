@@ -5,6 +5,9 @@ import org.fhtw.mytourapi.dto.CoverImageDto;
 import org.fhtw.mytourapi.exception.FileStorageException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -15,6 +18,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -62,6 +66,32 @@ public class CoverImageStorageService {
                 coverImage.sizeBytes()
         );
         return coverImage;
+    }
+
+    public Optional<StoredCoverImage> load(CoverImageDto coverImage) {
+        if (coverImage == null || coverImage.path() == null || coverImage.path().isBlank()) {
+            return Optional.empty();
+        }
+
+        Path rootDirectory = rootDirectory();
+        Path target = resolveStoredPath(rootDirectory, coverImage.path());
+        if (!Files.isRegularFile(target) || !Files.isReadable(target)) {
+            LOGGER.warn("Cover image file not found or not readable path={}", coverImage.path());
+            return Optional.empty();
+        }
+
+        try {
+            Resource resource = new FileSystemResource(target);
+            return Optional.of(new StoredCoverImage(
+                    resource,
+                    safeOriginalFilename(coverImage.originalFilename()),
+                    mediaType(coverImage.contentType()),
+                    Files.size(target)
+            ));
+        } catch (IOException exception) {
+            LOGGER.error("Could not read cover image file target={}", target, exception);
+            throw FileStorageException.internal("Could not read cover image file.", exception);
+        }
     }
 
     public void delete(String storedPath) {
@@ -137,6 +167,19 @@ public class CoverImageStorageService {
 
     private static String normalizedContentType(String contentType) {
         return contentType == null ? null : contentType.trim().toLowerCase();
+    }
+
+    private static MediaType mediaType(String contentType) {
+        String normalizedContentType = normalizedContentType(contentType);
+        if (normalizedContentType == null || normalizedContentType.isBlank()) {
+            return MediaType.APPLICATION_OCTET_STREAM;
+        }
+
+        try {
+            return MediaType.parseMediaType(normalizedContentType);
+        } catch (IllegalArgumentException exception) {
+            return MediaType.APPLICATION_OCTET_STREAM;
+        }
     }
 
     private static String safeOriginalFilename(String originalFilename) {

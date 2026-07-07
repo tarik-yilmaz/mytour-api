@@ -46,6 +46,25 @@ class CoverImageStorageServiceTest {
     }
 
     @Test
+    void loadReturnsStoredCoverImageResource() throws Exception {
+        CoverImageStorageService service = storageService();
+        byte[] content = "image-bytes".getBytes(StandardCharsets.UTF_8);
+        CoverImageDto storedImage = service.store(new MockMultipartFile(
+                "file",
+                "cover.png",
+                "image/png",
+                content
+        ));
+
+        StoredCoverImage result = service.load(storedImage).orElseThrow();
+
+        assertThat(result.originalFilename()).isEqualTo("cover.png");
+        assertThat(result.contentType().toString()).isEqualTo("image/png");
+        assertThat(result.sizeBytes()).isEqualTo((long) content.length);
+        assertThat(result.resource().getInputStream().readAllBytes()).isEqualTo(content);
+    }
+
+    @Test
     void storeRejectsUnsupportedContentType() {
         CoverImageStorageService service = storageService();
         MockMultipartFile file = new MockMultipartFile(

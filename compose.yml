@@ -25,7 +25,7 @@ services:
       - DB_PASSWORD=${POSTGRES_PASSWORD}
       - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}
       - PORT=8080
-      - JWT_SECRET=${JWT_SECRET}
+      - JWT_SECRET=${JWT_SECRET:-dev-only-change-me-at-least-32-characters}
       - JWT_ISSUER=${JWT_ISSUER:-mytour-api}
       - JWT_EXPIRATION=${JWT_EXPIRATION:-12h}
       - ORS_ENABLED=${ORS_ENABLED:-true}
