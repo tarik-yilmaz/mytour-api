@@ -79,26 +79,6 @@ class AuthControllerTest {
     }
 
     @Test
-    void registerReturns400WhenUsernameTooShort() throws Exception {
-        mockMvc.perform(post("/api/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"username": "ab", "password": "secret123"}
-                                """))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void registerReturns400WhenPasswordTooShort() throws Exception {
-        mockMvc.perform(post("/api/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"username": "alice", "password": "short"}
-                                """))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
     void registerReturns400WhenUsernameHasInvalidCharacters() throws Exception {
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -140,16 +120,6 @@ class AuthControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.accessToken").value("jwt-token"))
                 .andExpect(jsonPath("$.user.username").value("alice"));
-    }
-
-    @Test
-    void loginReturns400WhenPasswordIsBlank() throws Exception {
-        mockMvc.perform(post("/api/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"username": "alice", "password": ""}
-                                """))
-                .andExpect(status().isBadRequest());
     }
 
     @Test

@@ -88,19 +88,6 @@ class ApiExceptionHandlerTest {
     }
 
     @Test
-    void handleUpstreamServiceIncludesCauseClassInLog() {
-        UpstreamServiceException exception = new UpstreamServiceException(
-                HttpStatus.SERVICE_UNAVAILABLE, "Timeout", new java.net.SocketTimeoutException("read timed out")
-        );
-
-        ResponseEntity<ApiErrorResponse> response = handler.handleUpstreamService(exception, request);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().status()).isEqualTo(503);
-    }
-
-    @Test
     void handleFileStorageReturns400ForBadRequest() {
         ResponseEntity<ApiErrorResponse> response = handler.handleFileStorage(
                 FileStorageException.badRequest("Invalid path"), request

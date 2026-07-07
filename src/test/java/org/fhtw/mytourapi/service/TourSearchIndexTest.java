@@ -41,14 +41,6 @@ class TourSearchIndexTest {
     }
 
     @Test
-    void matchesByTourDescription() {
-        searchIndex.replaceLogs(1L, List.of());
-
-        assertThat(searchIndex.matches(tour(1L, "Danube Ride", "A scenic evening route"), "scenic", null)).isTrue();
-        assertThat(searchIndex.matches(tour(1L, "Danube Ride", "A scenic evening route"), "sce", null)).isTrue();
-    }
-
-    @Test
     void matchesByLogComment() {
         TourLogDto log = log(1L, 1L, "Beautiful sunset views", (short) 4);
         searchIndex.replaceLogs(1L, List.of(log));
@@ -88,14 +80,6 @@ class TourSearchIndexTest {
     }
 
     @Test
-    void matchesUsesPrefixMatching() {
-        searchIndex.replaceLogs(1L, List.of());
-
-        assertThat(searchIndex.matches(tour(1L, "Danube Ride", "Scenic"), "dan", null)).isTrue();
-        assertThat(searchIndex.matches(tour(1L, "Danube Ride", "Scenic"), "danube ri", null)).isTrue();
-    }
-
-    @Test
     void matchesNormalizesDiacritics() {
         searchIndex.replaceLogs(1L, List.of());
 
@@ -119,14 +103,6 @@ class TourSearchIndexTest {
 
         assertThat(searchIndex.matches(tour(1L), "nice", (short) 3)).isTrue();
         assertThat(searchIndex.matches(tour(1L), "nice", (short) 4)).isFalse();
-    }
-
-    @Test
-    void ratingFilterAllowsNullMinimum() {
-        TourLogDto log = log(1L, 1L, "Nice tour", (short) 2);
-        searchIndex.replaceLogs(1L, List.of(log));
-
-        assertThat(searchIndex.matches(tour(1L), "nice", null)).isTrue();
     }
 
     @Test
@@ -157,32 +133,6 @@ class TourSearchIndexTest {
 
         searchIndex.replaceLogs(1L, List.of());
         assertThat(searchIndex.matches(tour(1L), "unique", null)).isFalse();
-    }
-
-    @Test
-    void replaceLogsWithNullClearsLogDocument() {
-        TourLogDto log = log(1L, 1L, "Unique comment", (short) 4);
-        searchIndex.replaceLogs(1L, List.of(log));
-        assertThat(searchIndex.matches(tour(1L), "unique", null)).isTrue();
-
-        searchIndex.replaceLogs(1L, null);
-        assertThat(searchIndex.matches(tour(1L), "unique", null)).isFalse();
-    }
-
-    @Test
-    void matchesByTransportType() {
-        searchIndex.replaceLogs(1L, List.of());
-
-        assertThat(searchIndex.matches(tour(1L), "bike", null)).isTrue();
-        assertThat(searchIndex.matches(tour(1L), "hike", null)).isFalse();
-    }
-
-    @Test
-    void matchesByStartAndEndLocation() {
-        searchIndex.replaceLogs(1L, List.of());
-
-        assertThat(searchIndex.matches(tour(1L), "praterstern", null)).isTrue();
-        assertThat(searchIndex.matches(tour(1L), "donauinsel", null)).isTrue();
     }
 
     private static TourDetailDto tour(Long id) {

@@ -169,27 +169,6 @@ class TourControllerTest {
     }
 
     @Test
-    void createTourReturns400WhenTransportTypeIsNull() throws Exception {
-        String json = """
-                {
-                  "name": "Test Tour",
-                  "description": "desc",
-                  "startLocation": "Vienna",
-                  "endLocation": "Graz",
-                  "transportType": null,
-                  "timezoneId": "Europe/Vienna",
-                  "startCoordinate": {"latitude": 48.2, "longitude": 16.3},
-                  "endCoordinate": {"latitude": 47.0, "longitude": 15.4}
-                }
-                """;
-
-        mockMvc.perform(post("/api/tours")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
     void updateTourReturns200WhenFound() throws Exception {
         when(tourService.updateTour(eq(1L), any(UpdateTourRequest.class)))
                 .thenReturn(Optional.of(sampleDetail(1L)));

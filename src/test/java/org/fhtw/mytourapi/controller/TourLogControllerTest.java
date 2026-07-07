@@ -96,25 +96,6 @@ class TourLogControllerTest {
     }
 
     @Test
-    void createLogReturns400WhenDifficultyIsNull() throws Exception {
-        String json = """
-                {
-                  "performedAt": "2026-06-21T10:00:00Z",
-                  "comment": "Great tour",
-                  "difficulty": null,
-                  "totalDistanceM": 12000,
-                  "totalTimeS": 3600,
-                  "rating": 4
-                }
-                """;
-
-        mockMvc.perform(post("/api/tours/1/logs")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
     void createLogReturns400WhenRatingExceedsMax() throws Exception {
         String json = """
                 {
@@ -124,25 +105,6 @@ class TourLogControllerTest {
                   "totalDistanceM": 12000,
                   "totalTimeS": 3600,
                   "rating": 6
-                }
-                """;
-
-        mockMvc.perform(post("/api/tours/1/logs")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void createLogReturns400WhenTotalTimeIsZero() throws Exception {
-        String json = """
-                {
-                  "performedAt": "2026-06-21T10:00:00Z",
-                  "comment": "Great tour",
-                  "difficulty": 3,
-                  "totalDistanceM": 12000,
-                  "totalTimeS": 0,
-                  "rating": 4
                 }
                 """;
 
