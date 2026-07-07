@@ -1,5 +1,8 @@
 package org.fhtw.mytourapi.mapper;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.fhtw.mytourapi.domain.TourEntity;
 import org.fhtw.mytourapi.domain.TourLogEntity;
 import org.fhtw.mytourapi.domain.TourLogWeatherEntity;
@@ -19,9 +22,14 @@ import org.fhtw.mytourapi.dto.TransportType;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.util.Map;
 
 @Component
 public class TourPersistenceMapper {
+
+    private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
+    private static final TypeReference<Map<String, Object>> JSON_OBJECT_TYPE = new TypeReference<>() {
+    };
 
     public TourDetailDto toDetail(TourEntity tour) {
         return new TourDetailDto(
@@ -90,7 +98,7 @@ public class TourPersistenceMapper {
                 coordinate(route.getStartLat(), route.getStartLon()),
                 coordinate(route.getEndLat(), route.getEndLon()),
                 coordinate(route.getMidpointLat(), route.getMidpointLon()),
-                route.getRouteGeometry(),
+                toJsonObject(route.getRouteGeometry()),
                 route.getRouteFetchedAt()
         );
     }
@@ -186,7 +194,7 @@ public class TourPersistenceMapper {
         route.setEndLon(routeDto.endCoordinate().longitude());
         route.setMidpointLat(routeDto.midpointCoordinate().latitude());
         route.setMidpointLon(routeDto.midpointCoordinate().longitude());
-        route.setRouteGeometry(routeDto.routeGeometry());
+        route.setRouteGeometry(toJsonNode(routeDto.routeGeometry()));
         route.setRouteFetchedAt(routeDto.routeFetchedAt());
         return route;
     }
@@ -250,5 +258,21 @@ public class TourPersistenceMapper {
 
     private CoordinateDto coordinate(BigDecimal latitude, BigDecimal longitude) {
         return new CoordinateDto(latitude, longitude);
+    }
+
+    private Map<String, Object> toJsonObject(JsonNode jsonNode) {
+        if (jsonNode == null || jsonNode.isNull()) {
+            return null;
+        }
+
+        return JSON_MAPPER.convertValue(jsonNode, JSON_OBJECT_TYPE);
+    }
+
+    private JsonNode toJsonNode(Map<String, Object> jsonObject) {
+        if (jsonObject == null) {
+            return null;
+        }
+
+        return JSON_MAPPER.valueToTree(jsonObject);
     }
 }

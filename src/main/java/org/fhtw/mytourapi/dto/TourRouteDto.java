@@ -1,9 +1,9 @@
 package org.fhtw.mytourapi.dto;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.Instant;
+import java.util.Map;
 
 @Schema(description = "Route data generated from OpenRouteService and displayed by Leaflet.")
 public record TourRouteDto(
@@ -18,7 +18,7 @@ public record TourRouteDto(
         CoordinateDto midpointCoordinate,
 
         @Schema(description = "OpenRouteService GeoJSON stored as PostgreSQL jsonb.")
-        JsonNode routeGeometry,
+        Map<String, Object> routeGeometry,
 
         Instant routeFetchedAt
 ) {

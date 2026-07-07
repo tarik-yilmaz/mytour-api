@@ -1,6 +1,5 @@
 package org.fhtw.mytourapi.service;
 
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import org.fhtw.mytourapi.client.RouteDirectionsResult;
 import org.fhtw.mytourapi.config.OpenRouteServiceProperties;
 import org.fhtw.mytourapi.dto.CoordinateDto;
@@ -13,6 +12,8 @@ import org.springframework.boot.test.system.OutputCaptureExtension;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -42,7 +43,8 @@ class RouteCalculationServiceTest {
         assertThat(result.durationS()).isPositive();
         assertThat(result.route().routeSource()).isEqualTo("LOCAL");
         assertThat(result.route().routeProfile()).isEqualTo("cycling-regular");
-        assertThat(result.route().routeGeometry().path("type").asText()).isEqualTo("FeatureCollection");
+        assertThat(result.route().routeGeometry()).containsEntry("type", "FeatureCollection");
+        assertThat(result.route().routeGeometry().get("features")).isInstanceOf(List.class);
         assertThat(output).contains(
                 "Using local fallback route calculation",
                 "transportType=BIKE",
@@ -61,7 +63,7 @@ class RouteCalculationServiceTest {
                 START,
                 END,
                 START,
-                JsonNodeFactory.instance.objectNode().put("type", "FeatureCollection"),
+                geoJson(),
                 FETCHED_AT
         );
         RouteCalculationService service = new RouteCalculationService(
@@ -86,5 +88,9 @@ class RouteCalculationServiceTest {
 
     private static CoordinateDto coordinate(String latitude, String longitude) {
         return new CoordinateDto(new BigDecimal(latitude), new BigDecimal(longitude));
+    }
+
+    private static Map<String, Object> geoJson() {
+        return Map.of("type", "FeatureCollection", "features", List.of());
     }
 }

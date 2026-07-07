@@ -23,6 +23,8 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -149,6 +151,7 @@ class TourPersistenceMapperTest {
         assertThat(dto.startCoordinate().longitude()).isEqualByComparingTo("16.404400");
         assertThat(dto.endCoordinate().latitude()).isEqualByComparingTo("48.250000");
         assertThat(dto.midpointCoordinate().latitude()).isEqualByComparingTo("48.229600");
+        assertThat(dto.routeGeometry()).containsEntry("type", "LineString");
         assertThat(dto.routeFetchedAt()).isEqualTo(Instant.parse("2026-06-21T10:00:00Z"));
     }
 
@@ -267,7 +270,7 @@ class TourPersistenceMapperTest {
                 new CoordinateDto(new BigDecimal("48.2"), new BigDecimal("16.3")),
                 new CoordinateDto(new BigDecimal("47.0"), new BigDecimal("15.4")),
                 new CoordinateDto(new BigDecimal("47.6"), new BigDecimal("15.9")),
-                null, Instant.parse("2026-06-21T10:00:00Z")
+                geoJson(), Instant.parse("2026-06-21T10:00:00Z")
         );
 
         TourRouteEntity result = mapper.applyRoute(tour, routeDto);
@@ -281,6 +284,7 @@ class TourPersistenceMapperTest {
         assertThat(result.getStartLon()).isEqualByComparingTo("16.3");
         assertThat(result.getEndLat()).isEqualByComparingTo("47.0");
         assertThat(result.getMidpointLat()).isEqualByComparingTo("47.6");
+        assertThat(result.getRouteGeometry().path("type").asText()).isEqualTo("FeatureCollection");
         assertThat(result.getRouteFetchedAt()).isEqualTo(Instant.parse("2026-06-21T10:00:00Z"));
     }
 
@@ -293,7 +297,7 @@ class TourPersistenceMapperTest {
                 new CoordinateDto(new BigDecimal("48.3"), new BigDecimal("16.4")),
                 new CoordinateDto(new BigDecimal("47.1"), new BigDecimal("15.5")),
                 new CoordinateDto(new BigDecimal("47.7"), new BigDecimal("15.95")),
-                null, Instant.parse("2026-06-22T10:00:00Z")
+                geoJson(), Instant.parse("2026-06-22T10:00:00Z")
         );
 
         TourRouteEntity result = mapper.applyRoute(tour, routeDto);
@@ -302,6 +306,7 @@ class TourPersistenceMapperTest {
         assertThat(result.getRouteSource()).isEqualTo("LOCAL");
         assertThat(result.getRouteProfile()).isEqualTo("foot-hiking");
         assertThat(result.getStartLat()).isEqualByComparingTo("48.3");
+        assertThat(result.getRouteGeometry().path("type").asText()).isEqualTo("FeatureCollection");
         assertThat(result.getRouteFetchedAt()).isEqualTo(Instant.parse("2026-06-22T10:00:00Z"));
     }
 
@@ -514,5 +519,9 @@ class TourPersistenceMapperTest {
         weather.setWindSpeedKmh(new BigDecimal("15.0"));
         weather.setFetchedAt(Instant.parse("2026-06-21T11:00:00Z"));
         return weather;
+    }
+
+    private static Map<String, Object> geoJson() {
+        return Map.of("type", "FeatureCollection", "features", List.of());
     }
 }

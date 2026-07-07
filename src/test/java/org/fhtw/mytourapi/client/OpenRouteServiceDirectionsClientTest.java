@@ -11,6 +11,8 @@ import org.springframework.web.client.RestClient;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
@@ -74,11 +76,19 @@ class OpenRouteServiceDirectionsClientTest {
         assertThat(result.durationS()).isEqualTo(679);
         assertThat(result.route().routeSource()).isEqualTo("OPENROUTESERVICE");
         assertThat(result.route().routeProfile()).isEqualTo("cycling-regular");
-        assertThat(result.route().routeGeometry().path("type").asText()).isEqualTo("FeatureCollection");
+        assertThat(result.route().routeGeometry()).containsEntry("type", "FeatureCollection");
+        assertThat(result.route().routeGeometry().get("features")).isInstanceOf(List.class);
+        Map<String, Object> firstFeature = firstFeature(result.route().routeGeometry());
+        assertThat(firstFeature.get("geometry")).isInstanceOf(Map.class);
         server.verify();
     }
 
     private static CoordinateDto coordinate(String latitude, String longitude) {
         return new CoordinateDto(new BigDecimal(latitude), new BigDecimal(longitude));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> firstFeature(Map<String, Object> routeGeometry) {
+        return (Map<String, Object>) ((List<?>) routeGeometry.get("features")).getFirst();
     }
 }

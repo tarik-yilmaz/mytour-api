@@ -13,12 +13,12 @@ import org.fhtw.mytourapi.dto.TourLogDto;
 import org.fhtw.mytourapi.dto.TourRouteDto;
 import org.fhtw.mytourapi.dto.TransportType;
 import org.fhtw.mytourapi.exception.ImportValidationException;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -187,13 +187,17 @@ class TourImportServiceTest {
                 coordinate("48.2082", "16.3738"),
                 coordinate("48.2500", "16.4000"),
                 coordinate("48.2300", "16.3900"),
-                JsonNodeFactory.instance.objectNode().put("type", "FeatureCollection"),
+                geoJson(),
                 Instant.parse("2026-06-21T10:00:00Z")
         );
     }
 
     private static CoordinateDto coordinate(String latitude, String longitude) {
         return new CoordinateDto(new BigDecimal(latitude), new BigDecimal(longitude));
+    }
+
+    private static Map<String, Object> geoJson() {
+        return Map.of("type", "FeatureCollection", "features", List.of());
     }
 
     private static Consumer<Throwable> hasErrorContaining(String expected) {

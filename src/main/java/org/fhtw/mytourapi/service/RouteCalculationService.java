@@ -1,6 +1,8 @@
 package org.fhtw.mytourapi.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -17,12 +19,16 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
+import java.util.Map;
 
 @Service
 public class RouteCalculationService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RouteCalculationService.class);
     private static final String FALLBACK_ROUTE_SOURCE = "LOCAL";
+    private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
+    private static final TypeReference<Map<String, Object>> JSON_OBJECT_TYPE = new TypeReference<>() {
+    };
 
     private final OpenRouteServiceProperties properties;
     private final RouteDirectionsClient directionsClient;
@@ -62,7 +68,7 @@ public class RouteCalculationService {
         BigDecimal distanceM = calculateDistanceM(startCoordinate, endCoordinate);
         Integer durationS = estimateDurationS(distanceM, transportType);
         CoordinateDto midpoint = midpoint(startCoordinate, endCoordinate);
-        JsonNode geometry = fallbackGeoJson(startCoordinate, endCoordinate, distanceM, durationS);
+        Map<String, Object> geometry = toJsonObject(fallbackGeoJson(startCoordinate, endCoordinate, distanceM, durationS));
         TourRouteDto route = new TourRouteDto(
                 FALLBACK_ROUTE_SOURCE,
                 profile,
@@ -144,5 +150,9 @@ public class RouteCalculationService {
         };
 
         return Math.max(60, (int) Math.round(distanceM.doubleValue() / speedMetersPerSecond));
+    }
+
+    private Map<String, Object> toJsonObject(JsonNode jsonNode) {
+        return JSON_MAPPER.convertValue(jsonNode, JSON_OBJECT_TYPE);
     }
 }

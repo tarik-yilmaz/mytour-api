@@ -1,6 +1,7 @@
 package org.fhtw.mytourapi.client;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.fhtw.mytourapi.config.OpenRouteServiceProperties;
@@ -30,6 +31,8 @@ public class OpenRouteServiceDirectionsClient implements RouteDirectionsClient {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OpenRouteServiceDirectionsClient.class);
     private static final String ROUTE_SOURCE = "OPENROUTESERVICE";
+    private static final TypeReference<Map<String, Object>> JSON_OBJECT_TYPE = new TypeReference<>() {
+    };
 
     private final RestClient openRouteServiceRestClient;
     private final OpenRouteServiceProperties properties;
@@ -122,7 +125,7 @@ public class OpenRouteServiceDirectionsClient implements RouteDirectionsClient {
                 startCoordinate,
                 endCoordinate,
                 midpoint(startCoordinate, endCoordinate),
-                routeGeometry,
+                objectMapper.convertValue(routeGeometry, JSON_OBJECT_TYPE),
                 fetchedAt
         );
 
