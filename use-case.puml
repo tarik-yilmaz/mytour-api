@@ -1,19 +1,39 @@
 @startuml
 left to right direction
-actor User as User
-actor "OpenRouteService" as ORS <<Application>>
 
-rectangle "Tour Planner" {
-  usecase "Tour erstellen" as UC1
-  usecase "Routeninformationen abrufen" as UC2
-  usecase "Tourlog verwalten" as UC3
-  usecase "Volltextsuche durchführen" as UC4
+actor User
+actor "OpenRouteService" as ORS <<external>>
+actor "Open-Meteo" as OM <<external>>
+
+rectangle "MyTour" {
+  usecase "Register / login" as UC_AUTH
+  usecase "Manage tours" as UC_TOURS
+  usecase "Create / edit / delete tour" as UC_TOUR_CRUD
+  usecase "Upload / delete cover image" as UC_COVER
+  usecase "Fetch route data" as UC_ROUTE
+  usecase "View route on map" as UC_MAP
+  usecase "Manage tour logs" as UC_LOGS
+  usecase "Fetch weather snapshot" as UC_WEATHER
+  usecase "Search and filter tours" as UC_SEARCH
+  usecase "Import tours" as UC_IMPORT
+  usecase "Export tours" as UC_EXPORT
+  usecase "Seed demo data" as UC_DEMO
 }
 
-User --> UC1
-User --> UC3
-User --> UC4
+User --> UC_AUTH
+User --> UC_TOURS
+User --> UC_LOGS
+User --> UC_SEARCH
+User --> UC_IMPORT
+User --> UC_EXPORT
+User --> UC_DEMO
 
-UC1 ..> UC2 : <<include>>
-UC2 --> ORS
+UC_TOURS ..> UC_TOUR_CRUD : <<include>>
+UC_TOURS ..> UC_MAP : <<include>>
+UC_TOURS ..> UC_COVER : <<extend>>
+UC_TOUR_CRUD ..> UC_ROUTE : <<include>>
+UC_LOGS ..> UC_WEATHER : <<include>>
+
+UC_ROUTE --> ORS
+UC_WEATHER --> OM
 @enduml

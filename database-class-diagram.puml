@@ -131,6 +131,10 @@ end note
 note bottom of TourRouteEntity
 routeGeometry is OpenRouteService
 GeoJSON stored as PostgreSQL jsonb.
+The API DTO exposes it as a JSON
+object map so Jackson 3 serializes
+the GeoJSON content, not JsonNode
+implementation getters.
 Midpoint coordinates are used for
 weather lookup.
 end note
@@ -145,5 +149,14 @@ note bottom of TourLogWeatherEntity
 Generated Open-Meteo snapshot.
 If log time or route coordinates change,
 the snapshot is refetched and replaced.
+end note
+
+note bottom
+The diagram shows persistent columns
+and entity relationships. Detailed
+CHECK constraints, indexes, defaults,
+and FK cascade rules are defined in
+src/main/resources/db/migration/
+V1__init_schema.sql.
 end note
 @enduml

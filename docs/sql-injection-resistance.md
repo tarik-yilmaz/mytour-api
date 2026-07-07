@@ -1,6 +1,6 @@
 # SQL Injection Resistance Check
 
-Stand: 2026-07-04
+Stand: 2026-07-07
 
 ## Ziel
 
@@ -25,8 +25,7 @@ PreparedStatement
 
 Im produktiven Java-Code gibt es keine Treffer fuer diese APIs. Der einzige
 relevante Treffer beim breiteren Scan ist ein `StringBuilder` im
-`IntermediateTourSearchIndex`; dieser baut ein In-Memory-Suchdokument und keinen
-SQL-String.
+`TourSearchIndex`; dieser baut ein In-Memory-Suchdokument und keinen SQL-String.
 
 ## Aktuelle Datenzugriffsschicht
 
@@ -52,32 +51,36 @@ Parameter gebunden und nicht per String-Konkatenation in SQL eingefuegt.
 
 ## Aktuelle Suchstrecke
 
-Die aktive Tour-Suche laeuft noch ueber den Intermediate-Service und ist
-In-Memory:
+Die aktive Tour-Suche laeuft ueber den persistenten Tour-Service und einen
+In-Memory-Suchindex fuer die aktuell geladenen Tour-/Log-Dokumente:
 
 ```text
 TourController.searchTours(...)
-  -> IntermediateTourService.searchTours(...)
-  -> IntermediateTourSearchIndex.matches(...)
+  -> TourService.searchTours(...)
+  -> TourSearchIndex.replaceLogs(...)
+  -> TourSearchIndex.matches(...)
 ```
 
 Der Suchindex normalisiert Benutzereingaben zu Suchbegriffen und vergleicht sie
-mit einem Set von Dokument-Terms. Dabei wird kein SQL erzeugt oder ausgefuehrt.
+mit einem Set von Dokument-Terms. Dabei wird kein SQL aus Benutzereingaben
+erzeugt oder ausgefuehrt. Die Daten, die in den Suchindex eingehen, werden
+vorher ueber Spring-Data-JPA-Repository-Methoden mit Parameterbindung und
+Benutzer-Ownership-Filter geladen.
 
-Als Regression-Test wurde ergaenzt:
+Als Regression-Test ist unter anderem vorhanden:
 
 ```text
-IntermediateTourServiceSearchTest.searchTreatsSqlInjectionLikeInputAsPlainText
+TourSearchIndexTest
 ```
 
-Der Test stellt sicher, dass typische SQL-Injection-aehnliche Suchtexte wie
-`anything' OR '1'='1` nicht als Steuerlogik wirken und nicht alle Touren
-zurueckgeben.
+Die Suchtests stellen sicher, dass Suchtexte als normale Begriffe behandelt
+werden, dass mehrere Begriffe per AND-Logik wirken und dass Log-/Wetter-/
+Computed-Attribute nur ueber den Suchindex, nicht ueber dynamisches SQL,
+ausgewertet werden.
 
 ## Regel fuer spaetere Persistenz-Tasks
 
-Wenn die noch offenen DAL-Tasks fuer echte Tour-/TourLog-Persistenz umgesetzt
-werden, sollen neue Abfragen weiterhin ueber Spring Data JPA Derived Queries,
-Criteria API oder explizit parametrisierte Queries laufen. Nicht erlaubt sind
+Neue Abfragen sollen weiterhin ueber Spring Data JPA Derived Queries, Criteria
+API oder explizit parametrisierte Queries laufen. Nicht erlaubt sind
 String-Konkatenation mit Request-Werten, dynamische SQL-Fragmente aus
 Benutzereingaben oder direkte JDBC-Statements ohne Parameterbindung.

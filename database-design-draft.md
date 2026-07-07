@@ -100,6 +100,7 @@ Notes:
 
 - This table is separated from `tours` because route geometry is technical external API data.
 - `route_geometry` stores GeoJSON as PostgreSQL `jsonb`.
+- The JPA entity keeps this field as a Jackson `JsonNode` for PostgreSQL JSONB persistence, while the API DTO exposes it as a JSON-compatible `Map<String, Object>` so Spring Boot's Jackson 3 response serialization returns the actual GeoJSON tree.
 - Leaflet can consume the GeoJSON data naturally in the Angular UI.
 - `midpoint_lat` and `midpoint_lon` are used as the default weather lookup coordinate.
 

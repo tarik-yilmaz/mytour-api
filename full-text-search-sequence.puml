@@ -1,0 +1,32 @@
+@startuml
+title Full-Text Search Sequence
+
+actor User
+participant "ToursListViewModel" as VM
+participant "Generated ToursService" as Api
+participant "TourController" as Controller
+participant "TourService" as Service
+database "TourRepository" as TourRepo
+participant "TourPersistenceMapper" as Mapper
+participant "TourSearchIndex" as Index
+
+User -> VM: enter search text / filters
+VM -> Api: searchTours(q, filters)
+Api -> Controller: GET /api/tours
+Controller -> Service: searchTours(userId, q, filters)
+Service -> TourRepo: findAllByUser_IdOrderByUpdatedAtDesc(userId)
+TourRepo --> Service: user-owned TourEntity list
+
+loop each candidate tour
+  Service -> Mapper: toLog(log) and toDetail(tour)
+  Mapper --> Service: DTOs with route, logs, computed attributes
+  Service -> Index: replaceLogs(tourId, logs)
+  Service -> Index: matches(detail, q, ratingMin)
+  Index --> Service: true / false
+end
+
+Service --> Controller: TourSearchResponse
+Controller --> Api: JSON response
+Api --> VM: generated DTOs
+VM --> User: updated tour list and suggestions
+@enduml
