@@ -55,7 +55,7 @@ public class OpenRouteServiceDirectionsClient implements RouteDirectionsClient {
             String response = openRouteServiceRestClient.post()
                     .uri("/v2/directions/{profile}/geojson", profile)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .accept(MediaType.APPLICATION_JSON)
+                    .accept(new MediaType("application", "geo+json"))
                     .header(HttpHeaders.AUTHORIZATION, properties.getApiKey())
                     .body(requestBody(startCoordinate, endCoordinate))
                     .retrieve()
